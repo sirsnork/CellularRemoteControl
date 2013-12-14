@@ -114,7 +114,6 @@ namespace CellularRemoteControl
                 {
                     try
                     {
-
                         //output.Append(UTF8Encoding.UTF8.GetChars(readbuff(ReadBuffer)));
                         output.Append(GetUTF8StringFrombytes(ReadBuffer));
                         //UTF8Encoding.UTF8.GetChars(
@@ -261,7 +260,6 @@ namespace CellularRemoteControl
             }
             catch (Exception ecx)
             {
-
                 Debug.Print("SendSMS : " + ecx.Message.ToString());
             }
         }
@@ -312,6 +310,7 @@ namespace CellularRemoteControl
             }
             catch
             {
+                Debug.Print("SIM900_FirmwareVersion : " + ecx.Message.ToString());
             }
         }
 
@@ -327,6 +326,7 @@ namespace CellularRemoteControl
             }
             catch
             {
+                Debug.Print("SIM900_SignalQuality : " + ecx.Message.ToString());
             }
         }
         public void SIM900_GetTime()
@@ -341,6 +341,7 @@ namespace CellularRemoteControl
             }
             catch
             {
+                Debug.Print("SIM900_GetTime : " + ecx.Message.ToString());
             }
         }
 
@@ -389,8 +390,7 @@ namespace CellularRemoteControl
                     
             Data = FileTools.Replace(tmpOutputStr1[3].ToString(), "\"", "");
             Data = FileTools.Replace(Data, "/", "");
-               
-                
+           
             Ora = FileTools.Replace(tmpOutputStr1[4].ToString(), "\"", "");
                 
             char[] chrOra = Ora.ToCharArray();
@@ -399,14 +399,13 @@ namespace CellularRemoteControl
 
             Debug.Print("Received : " + Data + " to " + Ora);
 
-                
             FileTools.New(Data + Ora + ".sms", "SMS Received", lines[1]);
             Debug.Print("Messageo saved to SD.");
 
             FileTools.New("SMS.cmd", "", Cellular+";"+lines[1]);
             Debug.Print("Command saved to SD for test.");
         }
-        // set the system's date and time from a string in this format:  "mm/dd/yyyy hh:mm:ss" "+CCLK: yy/MM/dd,hh:mm:ss+zz"
+        // set the system's date and time from a string in this format:  "+CCLK: yy/MM/dd,hh:mm:ss+zz" maybe, not sure if the +CCLK will be here
         public static void SetDateTime(string dts)
         {
             var year = Str2Int(dts, 0);      // convert each of the numbers
