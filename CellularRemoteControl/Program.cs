@@ -29,6 +29,7 @@ namespace CellularRemoteControl
             
             seed.SIM900_FirmwareVersion();
             seed.SIM900_SignalQuality();
+            seed.SIM900_GetTime();
 
             Thread.Sleep(10000);
             

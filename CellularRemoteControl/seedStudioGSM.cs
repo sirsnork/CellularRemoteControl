@@ -47,7 +47,6 @@ namespace CellularRemoteControl
                     inputBytes[i] = 32;
                 }
             }
-
             return inputBytes;
         }
         static void serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -66,12 +65,10 @@ namespace CellularRemoteControl
                     // New line or terminated string.
                     output.Append(GetUTF8StringFrombytes(ReadBuffer));
 
-
                     if (!awatingResponseString.Equals("") && output.ToString().IndexOf(awatingResponseString) > -1)
                     {
                         Debug.Print("Response Matched : " + output.ToString());
                         awatingResponseString = "";
-
                     }
                     else
                     {
@@ -104,7 +101,11 @@ namespace CellularRemoteControl
                             string[] sSignalStrength = output.ToString().Split(',');
                             SignalStrength = int.Parse(FileTools.strMID(sSignalStrength[0], sSignalStrength[0].IndexOf(": ") + 2, sSignalStrength[0].Length));
                         }
-
+                        if (output.ToString().IndexOf("+CCLK:") > -1)
+                        {
+                            string[] sTime = output.ToString().Split(',');
+                            SetDateTime(sTime[0] + "\",\"" + sTime[1]);
+                        }
                     }
                     output.Clear();
                     awaitingResponse = false;
@@ -328,6 +329,20 @@ namespace CellularRemoteControl
             {
             }
         }
+        public void SIM900_GetTime()
+        {
+            try
+            {
+                Debug.Print("Get Network Time");
+                PrintLine("AT+CCLK?", true);
+                Thread.Sleep(100);
+                PrintEnd();
+                Thread.Sleep(500);
+            }
+            catch
+            {
+            }
+        }
 
         public void placeCall(string msisdn)
         {
@@ -390,6 +405,34 @@ namespace CellularRemoteControl
 
             FileTools.New("SMS.cmd", "", Cellular+";"+lines[1]);
             Debug.Print("Command saved to SD for test.");
+        }
+        // set the system's date and time from a string in this format:  "mm/dd/yyyy hh:mm:ss" "+CCLK: yy/MM/dd,hh:mm:ss+zz"
+        public static void SetDateTime(string dts)
+        {
+            var year = Str2Int(dts, 0);      // convert each of the numbers
+            var month = Str2Int(dts, 3);
+            var day = Str2Int(dts, 6);
+            var hour = Str2Int(dts, 9);
+            var minute = Str2Int(dts, 11);
+            var second = Str2Int(dts, 13);
+            System.DateTime dt = new System.DateTime(year, month, day, hour, minute, second);
+            Debug.Print("Date: " + dt);
+            Microsoft.SPOT.Hardware.Utility.SetLocalTime(dt);
+        }
+
+        // convert a string to an "int"  stops at the end-of-string, or at the first non-digit found
+        public static int Str2Int(string input, int offset)
+        {
+            int ret = 0;   // built the result here
+            for (int i = offset; i < input.Length; i++)  // stop when all chars have been processed
+            {
+                char c = input[i];      // get the next char
+                if (c < '0') break;     // stop if a non-number is found
+                if (c > '9') break;
+                int n = (int)c - 48;    // convert the ascii value to a number, IE '1' = 49
+                ret = n + 10 * ret;     // accumulate the result
+            }
+            return ret;   // return the result to caller
         }
     }
 }
