@@ -308,7 +308,7 @@ namespace CellularRemoteControl
                 PrintEnd();
                 Thread.Sleep(500);
             }
-            catch
+            catch (Exception ecx)
             {
                 Debug.Print("SIM900_FirmwareVersion : " + ecx.Message.ToString());
             }
@@ -324,7 +324,7 @@ namespace CellularRemoteControl
                 PrintEnd();
                 Thread.Sleep(500);
             }
-            catch
+            catch (Exception ecx)
             {
                 Debug.Print("SIM900_SignalQuality : " + ecx.Message.ToString());
             }
@@ -339,7 +339,7 @@ namespace CellularRemoteControl
                 PrintEnd();
                 Thread.Sleep(500);
             }
-            catch
+            catch (Exception ecx)
             {
                 Debug.Print("SIM900_GetTime : " + ecx.Message.ToString());
             }
