@@ -98,9 +98,10 @@ namespace CellularRemoteControl
             seed.DeleteAllSMS();
             seed.SIM900_GetTime();
 
-            // File containing Cellphone number to send SMS too
+            // File containing Cellphone number to send initialization SMS too
             string NumCellDefault = FileTools.ReadString("settings\\NumCellDefault.txt");
-            //string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split('\n');
+            // File containing cellphone numbers to accept commands from, all others are ignored, splitting on + sign since we get a single string back from the file read
+            string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split('+');
 
             _led_NewMessage.Write(true);
             Thread.Sleep(2000);
@@ -109,7 +110,6 @@ namespace CellularRemoteControl
   
             while (true)
             {
-                //Debug.Print("Received SMS");
                 _led_Active.Write(true);
                 Thread.Sleep(5000);
                 if (seedStudioGSM.LastMessage > 0)
@@ -124,83 +124,98 @@ namespace CellularRemoteControl
                        File.Delete(@"SD\\Temp\\SMS.cmd");
                        Debug.Print ("Commands: " + command[0] + "   " + command[1]);
 
-                       switch (command[1].Trim().ToUpper())
+                       if (CheckNumberWhitelist(command[0], CellWhitelist))
                        {
-                           case "SW1_ON":
-                               if (Relay.SW1_On())
-                               {
-                                   ReplySMS = "Switch 1 was turned On"; 
-                               }
-                               else
-                               {
-                                   ReplySMS = "Error turning On Switch 1"; 
-                               }
-                               break;
-                           case "SW1_OFF":
-                               if (Relay.SW1_Off())
-                               {
-                                   ReplySMS = "Switch 1 was turned Off.";
-                               }
-                               else
-                               {
-                                   ReplySMS = "Error turning Off Switch 1";
-                               }
-                               break;
-                           case "SW1_STATE":
-                               if (Relay.SW1_State())
-                               {
-                                   ReplySMS = "Switch 1 is On"; 
-                               }
-                               else
-                               {
-                                   ReplySMS = "Switch 1 is Off"; 
-                               }
-                               break;
-                           case "SW2_ON":
-                               if (Relay.SW2_On())
-                               {
-                                   ReplySMS = "Switch 2 was turned On";
-                               }
-                               else
-                               {
-                                   ReplySMS = "Error turning On Switch 2";
-                               }
-                               break;
-                           case "SW2_OFF":
-                               if (Relay.SW2_Off())
-                               {
-                                   ReplySMS = "Switch 2 was turned Off.";
-                               }
-                               else
-                               {
-                                   ReplySMS = "Error turning Off Switch 2";
-                               }
-                               break;
-                           case "SW2_STATE":
-                               if (Relay.SW2_State())
-                               {
-                                   ReplySMS = "Switch 2 is On";
-                               }
-                               else
-                               {
-                                   ReplySMS = "Switch 2 is Off";
-                               }
-                               break;
-                           default:
-                               ReplySMS = "";
-                               Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
-                               //seed.SendSMS(NumCellDefault,"Unknown command from " + command[0] + ": " + command[1]);
-                               break;
+                           switch (command[1].Trim().ToUpper())
+                           {
+                               case "SW1_ON":
+                                   if (Relay.SW1_On())
+                                   {
+                                       ReplySMS = "Switch 1 was turned On";
+                                   }
+                                   else
+                                   {
+                                       ReplySMS = "Error turning On Switch 1";
+                                   }
+                                   break;
+                               case "SW1_OFF":
+                                   if (Relay.SW1_Off())
+                                   {
+                                       ReplySMS = "Switch 1 was turned Off.";
+                                   }
+                                   else
+                                   {
+                                       ReplySMS = "Error turning Off Switch 1";
+                                   }
+                                   break;
+                               case "SW1_STATE":
+                                   if (Relay.SW1_State())
+                                   {
+                                       ReplySMS = "Switch 1 is On";
+                                   }
+                                   else
+                                   {
+                                       ReplySMS = "Switch 1 is Off";
+                                   }
+                                   break;
+                               case "SW2_ON":
+                                   if (Relay.SW2_On())
+                                   {
+                                       ReplySMS = "Switch 2 was turned On";
+                                   }
+                                   else
+                                   {
+                                       ReplySMS = "Error turning On Switch 2";
+                                   }
+                                   break;
+                               case "SW2_OFF":
+                                   if (Relay.SW2_Off())
+                                   {
+                                       ReplySMS = "Switch 2 was turned Off.";
+                                   }
+                                   else
+                                   {
+                                       ReplySMS = "Error turning Off Switch 2";
+                                   }
+                                   break;
+                               case "SW2_STATE":
+                                   if (Relay.SW2_State())
+                                   {
+                                       ReplySMS = "Switch 2 is On";
+                                   }
+                                   else
+                                   {
+                                       ReplySMS = "Switch 2 is Off";
+                                   }
+                                   break;
+                               default:
+                                   ReplySMS = "";
+                                   Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
+                                   seed.SendSMS(command[0],"Unknown command from " + command[0] + ": " + command[1]);
+                                   break;
+                           }
+                           if (ReplySMS.Length > 0)
+                               seed.SendSMS(command[0], ReplySMS);
+                           _led_NewMessage.Write(false);
                        }
-                       if (ReplySMS.Length > 0)
-                           seed.SendSMS(command[0], ReplySMS);
-                   }
-                   _led_NewMessage.Write(false);
+                       else
+                           Debug.Print(command[0] + " not in whitelist, message ignored");
+                    }
                 }
-
                 _led_Active.Write(false);
                 Thread.Sleep(5000);
-           }
+            }
+        }
+        public static Boolean CheckNumberWhitelist(string CellNumber, string[] CellWhiteList)
+        {
+            for (int j = 1; j < CellWhiteList.Length; j++) // start at 1 as the first entry in CellWhiteList will be blank as we split on '+'
+            {
+                if (CellNumber == '+' + CellWhiteList[j])
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

@@ -5,6 +5,9 @@ using Microsoft.SPOT;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Threading;
 
+// Driver for Seeedstudio GPRS Shield. Works for both V1 and V2 shields.
+// Configure Shield for hardware serial and install unlocked SIM card
+
 namespace CellularRemoteControl
 {
     class seedStudioGSM
@@ -43,7 +46,7 @@ namespace CellularRemoteControl
         {
             for (int i = 0; i < inputBytes.Length; i++)
             {
-                if (inputBytes[i] == 230)
+                if (inputBytes[i] == 230);
                 {
                     inputBytes[i] = 32;
                 }
@@ -55,6 +58,8 @@ namespace CellularRemoteControl
             // Check if Chars are received
             if (e.EventType == SerialData.Chars)
             {
+                // Waits until all the data is there, otherwise we end up missing the SMS message content
+                Thread.Sleep(500);
                 // Create new buffer
                 byte[] ReadBuffer = new byte[serialPort.BytesToRead];
                 // Read bytes from buffer
@@ -117,7 +122,6 @@ namespace CellularRemoteControl
                     {
                         //output.Append(UTF8Encoding.UTF8.GetChars(readbuff(ReadBuffer)));
                         output.Append(GetUTF8StringFrombytes(ReadBuffer));
-                        //UTF8Encoding.UTF8.GetChars(
                     }
                     catch (Exception ecx)
                     {
@@ -251,7 +255,6 @@ namespace CellularRemoteControl
         {
             try
             {
-                //PrintLine("");
                 PrintLine("AT+CMGF=1", true);
                 PrintLine("AT+CMGS=\"" + msisdn + "\"", false);
                 Thread.Sleep(100);
@@ -259,7 +262,6 @@ namespace CellularRemoteControl
                 Thread.Sleep(100);
                 PrintEnd();
                 Thread.Sleep(500);
-                //Debug.Print("SMS Sent!");
             }
             catch (Exception ecx)
             {
@@ -382,19 +384,15 @@ namespace CellularRemoteControl
             string Data = "";
             string Ora = "";
 
-            //string[] tmpOutputStr1 = Message.Split(','); 
             string[] tmpOutputStr1 = FileTools.Replace(FileTools.Replace(FileTools.Replace(Message, "\r", ""), "\n", ","), "\"", "").Split(',');
                 
-            Cellular = tmpOutputStr1[1].ToString(); 
-            //Cellular = FileTools.Replace(tmpOutputStr1[1].ToString(), "\"", "");
+            Cellular = tmpOutputStr1[2].ToString(); 
             Debug.Print("Sender: " + Cellular);
                     
-            Data = tmpOutputStr1[3].ToString();
-            //Data = FileTools.Replace(tmpOutputStr1[3].ToString(), "\"", "");
+            Data = tmpOutputStr1[4].ToString();
             Data = FileTools.Replace(Data, "/", "");
 
-            Ora = tmpOutputStr1[4].ToString();
-            //Ora = FileTools.Replace(tmpOutputStr1[4].ToString(), "\"", "");
+            Ora = tmpOutputStr1[5].ToString();
                 
             char[] chrOra = Ora.ToCharArray();
                 
@@ -402,10 +400,10 @@ namespace CellularRemoteControl
 
             Debug.Print("Received : " + Data + " to " + Ora);
 
-            FileTools.New(Data + Ora + ".sms", "ReceivedSMS", tmpOutputStr1[5]);
+            FileTools.New(Data + Ora + ".sms", "ReceivedSMS", tmpOutputStr1[6]);
             Debug.Print("Message " + tmpOutputStr1[5] + " saved to SD.");
 
-            FileTools.New("SMS.cmd", "Temp", Cellular +";"+ tmpOutputStr1[5]);
+            FileTools.New("SMS.cmd", "Temp", Cellular +";"+ tmpOutputStr1[6]);
             Debug.Print("Command saved to SD for test.");
         }
 
