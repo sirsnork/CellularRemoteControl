@@ -20,9 +20,10 @@ namespace CellularRemoteControl
 
         public static int LastMessage=0;
         public static int SignalStrength = 0;
+        public static int SMSIncoming = 0;
 
         //static int bufferLength = 0;
-        public seedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.Odd, int dataBits = 8, StopBits stopBits = StopBits.One)
+        public seedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             try
             {
@@ -59,12 +60,10 @@ namespace CellularRemoteControl
                 // Read bytes from buffer
                 serialPort.Read(ReadBuffer, 0, ReadBuffer.Length);
 
-
-                if (ReadBuffer.Length > 0 && (ReadBuffer[ReadBuffer.Length - 1] == 10 || ReadBuffer[ReadBuffer.Length - 1] == 0))
+                if (ReadBuffer.Length > 0 && (ReadBuffer[ReadBuffer.Length - 1] == 10 || ReadBuffer[ReadBuffer.Length - 1] == 0 || ReadBuffer[ReadBuffer.Length - 1] == 26))
                 {
                     // New line or terminated string.
                     output.Append(GetUTF8StringFrombytes(ReadBuffer));
-
                     if (!awatingResponseString.Equals("") && output.ToString().IndexOf(awatingResponseString) > -1)
                     {
                         Debug.Print("Response Matched : " + output.ToString());
@@ -90,7 +89,7 @@ namespace CellularRemoteControl
                         }
 
                         if (output.ToString().IndexOf("+CMGR:") > -1)
-                        {
+                        {                                                   
                             Debug.Print("Read Message");
                             RegisterSMS(output.ToString());
                         }
@@ -101,10 +100,12 @@ namespace CellularRemoteControl
                             string[] sSignalStrength = output.ToString().Split(',');
                             SignalStrength = int.Parse(FileTools.strMID(sSignalStrength[0], sSignalStrength[0].IndexOf(": ") + 2, sSignalStrength[0].Length));
                         }
+
                         if (output.ToString().IndexOf("+CCLK:") > -1)
                         {
                             string[] sTime = output.ToString().Split(',');
                             SetDateTime(sTime[0] + "\",\"" + sTime[1]);
+                            Debug.Print("Date: " + DateTime.Now.ToString());
                         }
                     }
                     output.Clear();
@@ -240,6 +241,8 @@ namespace CellularRemoteControl
             Debug.Print("SMS Storage SIM");
             PrintLine("AT+CPMS=\"SM\"", true);
             Thread.Sleep(100);
+            PrintLine("AT+CSDH=0", true);
+            Thread.Sleep(100);
             PrintEnd();
             Thread.Sleep(500);
         }
@@ -334,8 +337,10 @@ namespace CellularRemoteControl
             try
             {
                 Debug.Print("Get Network Time");
+                PrintLine("AT+CLTS=1", true);
+                Thread.Sleep(200);
                 PrintLine("AT+CCLK?", true);
-                Thread.Sleep(100);
+                Thread.Sleep(200);
                 PrintEnd();
                 Thread.Sleep(500);
             }
@@ -377,21 +382,19 @@ namespace CellularRemoteControl
             string Data = "";
             string Ora = "";
 
-            string[] tmpOutputStr1 = Message.Split(',');
-            string[] tmpOutputStr2 = tmpOutputStr1[0].Split(':');
-            
-            string[] lines = tmpOutputStr1[11].Split('\n');
-            for (int i = 0; i < lines.Length; i += 1)
-                lines[i] = lines[i].Trim();
+            //string[] tmpOutputStr1 = Message.Split(','); 
+            string[] tmpOutputStr1 = FileTools.Replace(FileTools.Replace(FileTools.Replace(Message, "\r", ""), "\n", ","), "\"", "").Split(',');
                 
-             
-            Cellular = FileTools.Replace(tmpOutputStr1[1].ToString(), "\"", "");
+            Cellular = tmpOutputStr1[1].ToString(); 
+            //Cellular = FileTools.Replace(tmpOutputStr1[1].ToString(), "\"", "");
             Debug.Print("Sender: " + Cellular);
                     
-            Data = FileTools.Replace(tmpOutputStr1[3].ToString(), "\"", "");
+            Data = tmpOutputStr1[3].ToString();
+            //Data = FileTools.Replace(tmpOutputStr1[3].ToString(), "\"", "");
             Data = FileTools.Replace(Data, "/", "");
-           
-            Ora = FileTools.Replace(tmpOutputStr1[4].ToString(), "\"", "");
+
+            Ora = tmpOutputStr1[4].ToString();
+            //Ora = FileTools.Replace(tmpOutputStr1[4].ToString(), "\"", "");
                 
             char[] chrOra = Ora.ToCharArray();
                 
@@ -399,23 +402,32 @@ namespace CellularRemoteControl
 
             Debug.Print("Received : " + Data + " to " + Ora);
 
-            FileTools.New(Data + Ora + ".sms", "SMS Received", lines[1]);
-            Debug.Print("Messageo saved to SD.");
+            FileTools.New(Data + Ora + ".sms", "ReceivedSMS", tmpOutputStr1[5]);
+            Debug.Print("Message " + tmpOutputStr1[5] + " saved to SD.");
 
-            FileTools.New("SMS.cmd", "", Cellular+";"+lines[1]);
+            FileTools.New("SMS.cmd", "Temp", Cellular +";"+ tmpOutputStr1[5]);
             Debug.Print("Command saved to SD for test.");
         }
+
         // set the system's date and time from a string in this format:  "+CCLK: yy/MM/dd,hh:mm:ss+zz" maybe, not sure if the +CCLK will be here
         public static void SetDateTime(string dts)
         {
-            var year = Str2Int(dts, 0);      // convert each of the numbers
-            var month = Str2Int(dts, 3);
-            var day = Str2Int(dts, 6);
-            var hour = Str2Int(dts, 9);
-            var minute = Str2Int(dts, 11);
-            var second = Str2Int(dts, 13);
+            var year = 2000 + Str2Int(dts, 19);      // convert each of the numbers
+            var month = Str2Int(dts, 22);
+            var day = Str2Int(dts, 25);
+            var hour = Str2Int(dts, 30);
+            var minute = Str2Int(dts, 33);
+            var second = Str2Int(dts, 36);
+            if (hour == 0 && minute == 0 && second == 0)
+            {
+                year = 2000 + Str2Int(dts, 8);      // the modem seems to return the initial command sometimes and not other times
+                month = Str2Int(dts, 11);
+                day = Str2Int(dts, 14);
+                hour = Str2Int(dts, 19);
+                minute = Str2Int(dts, 22);
+                second = Str2Int(dts, 25);
+            }
             System.DateTime dt = new System.DateTime(year, month, day, hour, minute, second);
-            Debug.Print("Date: " + dt);
             Microsoft.SPOT.Hardware.Utility.SetLocalTime(dt);
         }
 

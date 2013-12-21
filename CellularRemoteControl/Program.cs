@@ -16,22 +16,28 @@ namespace CellularRemoteControl
 
         public static OutputPort _led_Active = new OutputPort(Pins.GPIO_PIN_D2, false);
         public static OutputPort _led_NewMessage = new OutputPort(Pins.GPIO_PIN_D3, false);
-
+        public static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false);
 
         public static void Main()
         {
             // write your code here
             seedStudioGSM seed = new seedStudioGSM();
-            
+
+            // Automatically power up the SIM900.
+            Debug.Print("Powering up Modem");
+            _GPRS_Power_Active.Write(true);
+            Thread.Sleep(2500);
+            _GPRS_Power_Active.Write(false);
+            // End of SIM900 power up.
+
             _led_Active.Write(true);
-            Thread.Sleep(30000);
+            Thread.Sleep(10000);
             _led_Active.Write(false);
             
             seed.SIM900_FirmwareVersion();
             seed.SIM900_SignalQuality();
-            seed.SIM900_GetTime();
 
-            Thread.Sleep(10000);
+            Thread.Sleep(5000);
             
             // Excellent Signal
             if ((seedStudioGSM.SignalStrength >= 20) && (seedStudioGSM.SignalStrength <= 31))
@@ -87,12 +93,14 @@ namespace CellularRemoteControl
             }
             
             Thread.Sleep(10000);
-
+            
             seed.InitializeSMS();
             seed.DeleteAllSMS();
-            
+            seed.SIM900_GetTime();
+
             // File containing Cellphone number to send SMS too
             string NumCellDefault = FileTools.ReadString("settings\\NumCellDefault.txt");
+            //string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split('\n');
 
             _led_NewMessage.Write(true);
             Thread.Sleep(2000);
@@ -109,17 +117,17 @@ namespace CellularRemoteControl
                     _led_NewMessage.Write(true);
                    seed.ReadSMS(seedStudioGSM.LastMessage);
                    seed.DeleteAllSMS();
-                   if (File.Exists(@"SD\\SMS.cmd"))
+                   if (File.Exists(@"SD\\Temp\\SMS.cmd"))
                    {
                        string ReplySMS = "";
-                       string[] command = FileTools.ReadString("SMS.cmd").Split(';');
-                       File.Delete(@"SD\\SMS.cmd");
-                       Debug.Print (command[0] + "   " + command[1]);
+                       string[] command = FileTools.ReadString("Temp\\SMS.cmd").Split(';');
+                       File.Delete(@"SD\\Temp\\SMS.cmd");
+                       Debug.Print ("Commands: " + command[0] + "   " + command[1]);
 
-                       switch (command[1].ToUpper())
+                       switch (command[1].Trim().ToUpper())
                        {
                            case "SW1_ON":
-                               if (Cellular.Sw1_On())
+                               if (Relay.SW1_On())
                                {
                                    ReplySMS = "Switch 1 was turned On"; 
                                }
@@ -129,7 +137,7 @@ namespace CellularRemoteControl
                                }
                                break;
                            case "SW1_OFF":
-                               if (Cellular.SW1_Off())
+                               if (Relay.SW1_Off())
                                {
                                    ReplySMS = "Switch 1 was turned Off.";
                                }
@@ -139,7 +147,7 @@ namespace CellularRemoteControl
                                }
                                break;
                            case "SW1_STATE":
-                               if (Cellular.SW1_State())
+                               if (Relay.SW1_State())
                                {
                                    ReplySMS = "Switch 1 is On"; 
                                }
@@ -149,7 +157,7 @@ namespace CellularRemoteControl
                                }
                                break;
                            case "SW2_ON":
-                               if (Cellular.SW2_On())
+                               if (Relay.SW2_On())
                                {
                                    ReplySMS = "Switch 2 was turned On";
                                }
@@ -159,7 +167,7 @@ namespace CellularRemoteControl
                                }
                                break;
                            case "SW2_OFF":
-                               if (Cellular.SW2_Off())
+                               if (Relay.SW2_Off())
                                {
                                    ReplySMS = "Switch 2 was turned Off.";
                                }
@@ -169,7 +177,7 @@ namespace CellularRemoteControl
                                }
                                break;
                            case "SW2_STATE":
-                               if (Cellular.SW2_State())
+                               if (Relay.SW2_State())
                                {
                                    ReplySMS = "Switch 2 is On";
                                }
@@ -180,7 +188,8 @@ namespace CellularRemoteControl
                                break;
                            default:
                                ReplySMS = "";
-                               seed.SendSMS(NumCellDefault,"SMS da: " + command[0] + "\n\r" + command[1]);
+                               Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
+                               //seed.SendSMS(NumCellDefault,"Unknown command from " + command[0] + ": " + command[1]);
                                break;
                        }
                        if (ReplySMS.Length > 0)

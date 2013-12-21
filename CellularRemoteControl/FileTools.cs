@@ -30,8 +30,6 @@ namespace CellularRemoteControl
                 StringBuilder tmpContent = new StringBuilder(Content);
                 return tmpContent.Replace(ToReplace, ReplaceWith).ToString();
             }
-
-
         }
 
         public static string ReadString(string Filename)
@@ -126,5 +124,4 @@ namespace CellularRemoteControl
             }
         }
     }
-
 }

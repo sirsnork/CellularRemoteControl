@@ -5,15 +5,15 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 
 namespace CellularRemoteControl
 {
-    class Cellular
+    class Relay
     {
         private static OutputPort relay2 = new OutputPort(Pins.GPIO_PIN_D6, false);
         private static OutputPort relay1 = new OutputPort(Pins.GPIO_PIN_D7, false);
-        public Cellular()
+        public Relay()
         {
         }
 
-        public static Boolean Sw1_On()
+        public static Boolean SW1_On()
         {
             relay1.Write(true);
             if (relay1.Read())
