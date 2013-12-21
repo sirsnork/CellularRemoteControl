@@ -7,8 +7,8 @@ namespace CellularRemoteControl
 {
     class Relay
     {
-        private static OutputPort relay2 = new OutputPort(Pins.GPIO_PIN_D6, false);
-        private static OutputPort relay1 = new OutputPort(Pins.GPIO_PIN_D7, false);
+        private static OutputPort relay1 = new OutputPort(Pins.GPIO_PIN_D6, false);
+        private static OutputPort relay2 = new OutputPort(Pins.GPIO_PIN_D7, false);
         public Relay()
         {
         }
