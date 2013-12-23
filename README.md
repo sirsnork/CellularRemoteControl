@@ -30,4 +30,3 @@ Current commands are:
 * SW2_OFF     : Turns off D6 Pin
 * SW2_STATE   : Returns current state of D6 Pin
 
-Adding further actions or more pins would be trivial
