@@ -26,7 +26,7 @@ namespace CellularRemoteControl
         public static int SMSIncoming = 0;
 
         //static int bufferLength = 0;
-        public seedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
+        public seedStudioGSM(string portName = "COM3", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             try
             {
