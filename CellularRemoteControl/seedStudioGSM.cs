@@ -6,7 +6,7 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Threading;
 
 // Driver for Seeedstudio GPRS Shield. Works for both V1 and V2 shields.
-// Configure Shield for hardware serial and install unlocked SIM card
+// Configure Shield for software serial and install unlocked SIM card
 
 namespace CellularRemoteControl
 {
