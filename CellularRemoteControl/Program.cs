@@ -20,7 +20,6 @@ namespace CellularRemoteControl
 
         public static void Main()
         {
-            // write your code here
             seedStudioGSM seed = new seedStudioGSM();
 
             // Automatically power up the SIM900.
@@ -107,11 +106,12 @@ namespace CellularRemoteControl
             Thread.Sleep(2000);
             seed.SendSMS(NumCellDefault, "Remote switch controller operational");
             _led_NewMessage.Write(false);
-  
+
             while (true)
             {
                 _led_Active.Write(true);
-                Thread.Sleep(5000);
+                Thread.Sleep(2000);
+
                 if (seedStudioGSM.LastMessage > 0)
                 {
                     _led_NewMessage.Write(true);
