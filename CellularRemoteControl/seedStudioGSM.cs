@@ -25,8 +25,7 @@ namespace CellularRemoteControl
         public static int SignalStrength = 0;
         public static int SMSIncoming = 0;
 
-        //static int bufferLength = 0;
-        public seedStudioGSM(string portName = "COM3", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
+        public seedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             try
             {
@@ -79,12 +78,12 @@ namespace CellularRemoteControl
                         Debug.Print(output.ToString());
                         if (output.ToString().IndexOf("+CMTI: \"SM\"") > -1)
                         {
-                            Program._led_NewMessage .Write(true);
+//                            Program._led_NewMessage.Write(true);
                             Debug.Print("New Message received.");
                             string[] sCMTI = output.ToString().Split(',');
                             LastMessage = int.Parse (FileTools.strMID(sCMTI[1],0,sCMTI[1].Length-2));
                             Thread.Sleep(1000);
-                            Program._led_NewMessage.Write(false);
+//                            Program._led_NewMessage.Write(false);
                         }
 
                         if (output.ToString().IndexOf("CONNECT OK") > -1)
@@ -120,7 +119,6 @@ namespace CellularRemoteControl
                 {
                     try
                     {
-                        //output.Append(UTF8Encoding.UTF8.GetChars(readbuff(ReadBuffer)));
                         output.Append(GetUTF8StringFrombytes(ReadBuffer));
                     }
                     catch (Exception ecx)
@@ -418,7 +416,7 @@ namespace CellularRemoteControl
             var second = Str2Int(dts, 36);
             if (hour == 0 && minute == 0 && second == 0)
             {
-                year = 2000 + Str2Int(dts, 8);      // the modem seems to return the initial command sometimes and not other times
+                year = 2000 + Str2Int(dts, 8);      // the modem seems to prefix the actual AT command sometimes and not other times
                 month = Str2Int(dts, 11);
                 day = Str2Int(dts, 14);
                 hour = Str2Int(dts, 19);
