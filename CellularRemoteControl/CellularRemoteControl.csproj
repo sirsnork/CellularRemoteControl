@@ -35,6 +35,7 @@
   </PropertyGroup>
   <Import Project="$(NetMfTargetsBaseDir)$(TargetFrameworkVersion)\CSharp.Targets" />
   <ItemGroup>
+    <Compile Include="lcd.cs" />
     <Compile Include="Relay.cs" />
     <Compile Include="FileTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
