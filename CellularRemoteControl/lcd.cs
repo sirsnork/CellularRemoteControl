@@ -44,12 +44,13 @@ namespace CellularRemoteControl
         { 
             _lcd = new SerialPort(com, 9600, Parity.None, 8, StopBits.One);
             _lcd.Open();
+            Thread.Sleep(2);
             _lcd.Write(SLCD_CONTROL_HEADER,0 ,1);
             _lcd.Write(SLCD_POWER_OFF, 0, 1);
-            Thread.Sleep(2);
+            Thread.Sleep(1);
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_POWER_ON, 0, 1);
-            Thread.Sleep(2);
+            Thread.Sleep(1);
             _lcd.Write(SLCD_INIT_ACK, 0, 1);
         }
 

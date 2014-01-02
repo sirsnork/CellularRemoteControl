@@ -1,5 +1,5 @@
-﻿#define LCD
-#define WEB
+﻿#define LCD // set to #undef LCD if no screen is attached to COM2
+#undef WEB // set to #undef WEB to disable web server (not yet implemented)
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -15,7 +15,7 @@ namespace CellularRemoteControl
 {
     public class Program
     {
-        public static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false);
+        public static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
         public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields Shields. Toggling reboots all shields
 
         public static void Main()
@@ -31,30 +31,34 @@ namespace CellularRemoteControl
                 string SW4State;
                 bool backlightState = false;
             #endif
+
             // Power cycle the shields
             Thread.Sleep(200); // Don't bounce power to the shields too fast
             _shieldPower.Write(true);
-            Thread.Sleep(200);
+            Thread.Sleep(200); // Let the shields come up before trying to access them
 
-            seedStudioGSM seed = new seedStudioGSM();
+            seedStudioGSM gprs = new seedStudioGSM();
            
             #if (LCD)
                 // initialise the LCD display
-                LCD mylcd = new LCD("COM2");
+                LCD lcd = new LCD("COM2");
 
                 Thread.Sleep(500);
 
                 // Turn on Backlight for LCD, flickers due to power when only running on USB
-                mylcd.backlight();
-                mylcd.Clear();
+                lcd.backlight();
+                lcd.Clear();
             
                 lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Initializing");
                 lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Modem");
-                mylcd.SetCursor(0, 0);
-                mylcd.print(lcdMessageLine1);
-                mylcd.SetCursor(0, 1);
-                mylcd.print(lcdMessageLine2);
+                lcd.SetCursor(0, 0);
+                lcd.print(lcdMessageLine1);
+                lcd.SetCursor(0, 1);
+                lcd.print(lcdMessageLine2);
+            #else
+                Thread.Sleep(500);
             #endif
+
             // Automatically power up the SIM900.
             Debug.Print("Powering up Modem");
             _GPRS_Power_Active.Write(true);
@@ -62,10 +66,10 @@ namespace CellularRemoteControl
             _GPRS_Power_Active.Write(false);        
             // End of SIM900 power up.
 
-            Thread.Sleep(15000);
+            Thread.Sleep(20000);
             
-            seed.SIM900_FirmwareVersion();
-            seed.SIM900_SignalQuality();
+            gprs.SIM900_FirmwareVersion();
+            gprs.SIM900_SignalQuality();
 
             Thread.Sleep(5000);
             
@@ -105,18 +109,18 @@ namespace CellularRemoteControl
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("      None");
                 #endif
             }
+
             #if (LCD)
-                mylcd.Clear();
-                mylcd.SetCursor(0, 0);
-                mylcd.print(lcdMessageLine1);
-                mylcd.SetCursor(0, 1);
-                mylcd.print(lcdMessageLine2);
+                lcd.Clear();
+                lcd.SetCursor(0, 0);
+                lcd.print(lcdMessageLine1);
+                lcd.SetCursor(0, 1);
+                lcd.print(lcdMessageLine2);
             #endif           
-            Thread.Sleep(10000);
             
-            seed.InitializeSMS();
-            seed.DeleteAllSMS();
-            seed.SIM900_GetTime();
+            gprs.InitializeSMS();
+            gprs.DeleteAllSMS();
+            gprs.SIM900_GetTime();
 
             // File containing Cellphone number to send initialization SMS too
             string NumCellDefault = FileTools.ReadString("settings\\NumCellDefault.txt");
@@ -124,14 +128,14 @@ namespace CellularRemoteControl
             string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split('+');
 
             // Send SMS to default number saying we are up!
-            //seed.SendSMS(NumCellDefault, "Remote switch controller operational");
+            //gprs.SendSMS(NumCellDefault, "Remote switch controller operational");
 
             while (true)
             {
                 if (seedStudioGSM.LastMessage > 0)
                 {
-                   seed.ReadSMS(seedStudioGSM.LastMessage);
-                   seed.DeleteAllSMS();
+                   gprs.ReadSMS(seedStudioGSM.LastMessage);
+                   gprs.DeleteAllSMS();
                    if (File.Exists(@"SD\\Temp\\SMS.cmd"))
                    {
                        string ReplySMS = "";
@@ -139,7 +143,7 @@ namespace CellularRemoteControl
                        File.Delete(@"SD\\Temp\\SMS.cmd");
                        Debug.Print ("Commands: " + command[0] + "   " + command[1]);
 
-                       if (CheckNumberWhitelist(command[0], CellWhitelist))
+                       if (CheckNumberWhitelist(command[0], CellWhitelist)) // Make sure incoming message was sent from allowed number
                        {
                            switch (command[1].Trim().ToUpper())
                            {
@@ -266,11 +270,11 @@ namespace CellularRemoteControl
                                default:
                                    ReplySMS = "";
                                    Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
-                                   seed.SendSMS(command[0],"Unknown command from " + command[0] + ": " + command[1]);
+                                   gprs.SendSMS(command[0], "Unknown command from " + command[0] + ": " + command[1]);
                                    break;
                            }
                            if (ReplySMS.Length > 0)
-                               seed.SendSMS(command[0], ReplySMS);
+                               gprs.SendSMS(command[0], ReplySMS);
                        }
                        else
                            Debug.Print(command[0] + " not in whitelist, message ignored");
@@ -287,7 +291,7 @@ namespace CellularRemoteControl
                     }
                     if (Relay.SW2_State())
                     {
-                        SW2State = "SW2:On";
+                        SW2State = "SW2:On ";
                     }
                     else
                     {
@@ -311,29 +315,29 @@ namespace CellularRemoteControl
                     }
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes(SW1State + SW2State);
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes(SW3State + SW4State);
+                    // Check is LCD data needs to be updated
                     if (System.Convert.ToBase64String(lcdMessageLine1) != System.Convert.ToBase64String(oldlcdMessageLine1) || System.Convert.ToBase64String(lcdMessageLine2) != System.Convert.ToBase64String(oldlcdMessageLine2))
                     {
-                        mylcd.backlight();
+                        lcd.backlight();
                         backlightState = true;
                         if (lcdMessageLine1 != oldlcdMessageLine1)
                         {
-                            //mylcd.Clear();
                             oldlcdMessageLine1 = lcdMessageLine1;
-                            mylcd.SetCursor(0, 0);
-                            mylcd.print(lcdMessageLine1);
+                            lcd.SetCursor(0, 0);
+                            lcd.print(lcdMessageLine1);
                         }
                         if (lcdMessageLine2 != oldlcdMessageLine2)
                         {
                             oldlcdMessageLine2 = lcdMessageLine2;
-                            mylcd.SetCursor(0, 1);
-                            mylcd.print(lcdMessageLine2);
+                            lcd.SetCursor(0, 1);
+                            lcd.print(lcdMessageLine2);
                         }
                     }
-                    else
+                    else // turn backlight off if data wasn't updated and it is on
                     {
                         if (backlightState == true)
                         {
-                            mylcd.noBacklight();
+                            lcd.noBacklight();
                             backlightState = false;
                         }
                     }
@@ -343,7 +347,7 @@ namespace CellularRemoteControl
         }
         public static Boolean CheckNumberWhitelist(string CellNumber, string[] CellWhiteList)
         {
-            for (int j = 1; j < CellWhiteList.Length; j++) // start at 1 as the first entry in CellWhiteList will be blank as we split on '+'
+            for (int j = 1; j < CellWhiteList.Length; j++) // start at 1 as the first entry in CellWhiteList will be blank as we split on '+' and '+' was the first character
             {
                 if (CellNumber == '+' + CellWhiteList[j])
                 {

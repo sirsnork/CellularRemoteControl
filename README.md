@@ -8,7 +8,7 @@ http://forums.netduino.com/index.php?/topic/8433-remote-control-heating/
 
 Instructions:
 
-Set GPRS Sheild to "HardwareSerial/Arduino". This sets it to use D0 and D1 as it's serial port, which corresponds to COM1 on the Netduino 2. The LCD Connects to COM2, or D2/D3 leaving D4-D7 free for the SeeedStudion Relay Shiled V2
+Set GPRS Sheild to "HardwareSerial/Arduino". This sets it to use D0 and D1 as it's serial port, which corresponds to COM1 on the Netduino 2. The LCD Connects to COM2 (if enabled), or D2/D3 leaving D4-D7 free for the SeeedStudion Relay Shiled V2
 
 You must install an SD card with the following folder/file structure
 

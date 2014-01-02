@@ -78,12 +78,10 @@ namespace CellularRemoteControl
                         Debug.Print(output.ToString());
                         if (output.ToString().IndexOf("+CMTI: \"SM\"") > -1)
                         {
-//                            Program._led_NewMessage.Write(true);
                             Debug.Print("New Message received.");
                             string[] sCMTI = output.ToString().Split(',');
                             LastMessage = int.Parse (FileTools.strMID(sCMTI[1],0,sCMTI[1].Length-2));
                             Thread.Sleep(1000);
-//                            Program._led_NewMessage.Write(false);
                         }
 
                         if (output.ToString().IndexOf("CONNECT OK") > -1)
@@ -183,7 +181,6 @@ namespace CellularRemoteControl
                 Thread.Sleep(1000);
             }
             connected = false;
-            //Thread.Sleep(10000);// Wait until CONNECT OK is recieved can be up to 8 secs (should make something smarter)
             serialPort.Flush();
 
             PrintLine("AT+CIPSEND");//Start data through TCP connection
@@ -379,26 +376,26 @@ namespace CellularRemoteControl
         private static void RegisterSMS(string Message)
         {
             string Cellular="";
-            string Data = "";
-            string Ora = "";
+            string Date = "";
+            string Time = "";
 
             string[] tmpOutputStr1 = FileTools.Replace(FileTools.Replace(FileTools.Replace(Message, "\r", ""), "\n", ","), "\"", "").Split(',');
                 
             Cellular = tmpOutputStr1[2].ToString(); 
             Debug.Print("Sender: " + Cellular);
                     
-            Data = tmpOutputStr1[4].ToString();
-            Data = FileTools.Replace(Data, "/", "");
+            Date = tmpOutputStr1[4].ToString();
+            Date = FileTools.Replace(Date, "/", "");
 
-            Ora = tmpOutputStr1[5].ToString();
-                
-            char[] chrOra = Ora.ToCharArray();
-                
-            Ora = chrOra[0].ToString() + chrOra[1].ToString() + chrOra[3].ToString() + chrOra[4].ToString() + chrOra[6].ToString() + chrOra[7].ToString();
+            Time = tmpOutputStr1[5].ToString();
 
-            Debug.Print("Received : " + Data + " to " + Ora);
+            char[] chrTime = Time.ToCharArray();
 
-            FileTools.New(Data + Ora + ".sms", "ReceivedSMS", tmpOutputStr1[6]);
+            Time = chrTime[0].ToString() + chrTime[1].ToString() + chrTime[3].ToString() + chrTime[4].ToString() + chrTime[6].ToString() + chrTime[7].ToString();
+
+            Debug.Print("Received : " + Date + " to " + Time);
+
+            FileTools.New(Date + Time + ".sms", "ReceivedSMS", tmpOutputStr1[6]);
             Debug.Print("Message " + tmpOutputStr1[5] + " saved to SD.");
 
             FileTools.New("SMS.cmd", "Temp", Cellular +";"+ tmpOutputStr1[6]);
