@@ -61,8 +61,8 @@ namespace CellularRemoteControl
                 // initialise the LCD display
                 LCD lcd = new LCD("COM2");
 
-                // Timer turns Backlight off after 10 seconds of inactivity
-                backlightTimeout = new TimerCallback(TimerInterrupt);
+                // Timer turns Backlight off after 30 seconds of inactivity
+                backlightTimeout = new TimerCallback(BacklightTimerInterrupt);
                 backlightTimer = new Timer(backlightTimeout, lcd, 0, 30000);
 
                 Thread.Sleep(4000);
@@ -77,7 +77,7 @@ namespace CellularRemoteControl
                     if (System.Convert.ToBase64String(lcdMessageLine1) != System.Convert.ToBase64String(oldlcdMessageLine1) || System.Convert.ToBase64String(lcdMessageLine2) != System.Convert.ToBase64String(oldlcdMessageLine2))
                     {
                         lcd.backlight();
-                        backlightTimer.Change(30000, 0); // Reset backlight timer to 10 seconds after screen change
+                        backlightTimer.Change(30000, 0); // Reset backlight timer to 30 seconds after screen change
                         if (lcdMessageLine1 != oldlcdMessageLine1)
                         {
                             oldlcdMessageLine1 = lcdMessageLine1;
@@ -94,7 +94,7 @@ namespace CellularRemoteControl
                     Thread.Sleep(1000);
                 }
             }
-            static void TimerInterrupt(object state)
+            static void BacklightTimerInterrupt(object state)
             {
                 LCD lcd = (LCD)state;
                 lcd.noBacklight();
