@@ -55,7 +55,6 @@ namespace CellularRemoteControl
             {
                 byte[] oldlcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("0");
                 byte[] oldlcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("0");
-                bool backlightState = false;
                 Timer backlightTimer = null;
                 TimerCallback backlightTimeout = null;
 
@@ -79,7 +78,6 @@ namespace CellularRemoteControl
                     {
                         lcd.backlight();
                         backlightTimer.Change(30000, 0); // Reset backlight timer to 10 seconds after screen change
-                        backlightState = true;
                         if (lcdMessageLine1 != oldlcdMessageLine1)
                         {
                             oldlcdMessageLine1 = lcdMessageLine1;
