@@ -45,7 +45,7 @@ namespace CellularRemoteControl
         {
             for (int i = 0; i < inputBytes.Length; i++)
             {
-                if (inputBytes[i] == 230);
+                if (inputBytes[i] == 230)
                 {
                     inputBytes[i] = 32;
                 }

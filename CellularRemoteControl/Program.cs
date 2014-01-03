@@ -56,9 +56,15 @@ namespace CellularRemoteControl
                 byte[] oldlcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("0");
                 byte[] oldlcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("0");
                 bool backlightState = false;
+                Timer backlightTimer = null;
+                TimerCallback backlightTimeout = null;
 
                 // initialise the LCD display
                 LCD lcd = new LCD("COM2");
+
+                // Timer turns Backlight off after 10 seconds of inactivity
+                backlightTimeout = new TimerCallback(TimerInterrupt);
+                backlightTimer = new Timer(backlightTimeout, lcd, 0, 30000);
 
                 Thread.Sleep(4000);
 
@@ -72,6 +78,7 @@ namespace CellularRemoteControl
                     if (System.Convert.ToBase64String(lcdMessageLine1) != System.Convert.ToBase64String(oldlcdMessageLine1) || System.Convert.ToBase64String(lcdMessageLine2) != System.Convert.ToBase64String(oldlcdMessageLine2))
                     {
                         lcd.backlight();
+                        backlightTimer.Change(30000, 0); // Reset backlight timer to 10 seconds after screen change
                         backlightState = true;
                         if (lcdMessageLine1 != oldlcdMessageLine1)
                         {
@@ -86,16 +93,13 @@ namespace CellularRemoteControl
                             lcd.print(lcdMessageLine2);
                         }
                     }
-                    else // turn backlight off if data wasn't updated and it is on
-                    {
-                        if (backlightState == true)
-                        {
-                            lcd.noBacklight();
-                            backlightState = false;
-                        }
-                    }
                     Thread.Sleep(1000);
                 }
+            }
+            static void TimerInterrupt(object state)
+            {
+                LCD lcd = (LCD)state;
+                lcd.noBacklight();
             }
         #endif
 
