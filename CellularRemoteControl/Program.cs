@@ -17,7 +17,7 @@ using System.IO;
 #if (CELL)
     using seeedStudio.GPRS;
 #endif
-    using Gsiot.Server;
+    using Gsiot.Server; // Web Server
 #if (WEB)
     
 #endif
@@ -89,6 +89,10 @@ namespace CellularRemoteControl
                     {
                         lcd.backlight();
                         backlightTimer.Change(30000, 0); // Reset backlight timer to 30 seconds after screen change
+                        if ((lcdMessageLine1 != oldlcdMessageLine1) && (lcdMessageLine2 != oldlcdMessageLine2))
+                        {
+                            lcd.Clear();
+                        }
                         if (lcdMessageLine1 != oldlcdMessageLine1)
                         {
                             oldlcdMessageLine1 = lcdMessageLine1;
@@ -358,7 +362,7 @@ namespace CellularRemoteControl
                         lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
                     #endif
-                    Thread.Sleep(5000);
+                    Thread.Sleep(10000);
                 }
             }
             public static Boolean CheckNumberWhitelist(string CellNumber, string[] CellWhiteList)
@@ -377,6 +381,10 @@ namespace CellularRemoteControl
         #if (WEB)
             public static void Web_thread()
             {
+                InterruptPort button = new InterruptPort(Pins.GPIO_PIN_D8, false, Port.ResistorMode.Disabled, Port.InterruptMode.InterruptEdgeBoth);
+                // Create an event handler for the button
+                button.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
+
                 var webServer = new HttpServer
                 {
                     RequestRouting =
@@ -386,6 +394,7 @@ namespace CellularRemoteControl
                 };
                 webServer.Run();
             }
+
             static void HandleGetHelloHtml(RequestHandlerContext context)
             {   
                 string s =
@@ -399,6 +408,19 @@ namespace CellularRemoteControl
                     "</html>";
                 context.SetResponse(s, "text/html");
             }
+            #if (LCD)
+                public static void DisplayIP()
+                {
+                    var IPAddress = "";
+                    IPAddress = Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress;
+                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("IP Address:");
+                    lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes(IPAddress);
+                }
+                private static void button_OnInterrupt(uint port, uint data, DateTime time)
+                {
+                    DisplayIP();
+                }
+            #endif
         #endif
     }
 }
