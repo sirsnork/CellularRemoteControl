@@ -11,13 +11,17 @@ using SecretLabs.NETMF.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.IO;
-using seeedStudio.SerialLCD;
+#if (LCD)
+    using seeedStudio.SerialLCD;
+#endif
+#if (CELL)
+    using seeedStudio.GPRS;
+#endif
 
 namespace CellularRemoteControl
 {
     public class Program
     {
-        public static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
         public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields Shields. Toggling reboots all shields
 
         #if (LCD)
@@ -109,12 +113,7 @@ namespace CellularRemoteControl
             {
                 seeedStudioGSM gprs = new seeedStudioGSM();
 
-                // Automatically power up the SIM900.
-                Debug.Print("Powering up Modem");
-                _GPRS_Power_Active.Write(true);
-                Thread.Sleep(2500);
-                _GPRS_Power_Active.Write(false);        
-                // End of SIM900 power up.
+                gprs.TogglePower();
 
                 #if (LCD)
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Initializing");

@@ -2,13 +2,15 @@ using System;
 using System.IO.Ports;
 using System.Text;
 using Microsoft.SPOT;
+using Microsoft.SPOT.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Threading;
+using CellularRemoteControl;
 
 // Driver for Seeedstudio GPRS Shield. Works for both V1 and V2 shields.
 // Configure Shield for software serial and install unlocked SIM card
 
-namespace CellularRemoteControl
+namespace seeedStudio.GPRS
 {
     class seeedStudioGSM
     {
@@ -24,6 +26,8 @@ namespace CellularRemoteControl
         public static int LastMessage=0;
         public static int SignalStrength = 0;
         public static int SMSIncoming = 0;
+
+        public static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
 
         public seeedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
@@ -437,6 +441,15 @@ namespace CellularRemoteControl
                 ret = n + 10 * ret;     // accumulate the result
             }
             return ret;   // return the result to caller
+        }
+        public void TogglePower()
+        {
+            // Automatically power up the SIM900.
+            Debug.Print("Powering up Modem");
+            _GPRS_Power_Active.Write(true);
+            Thread.Sleep(2500);
+            _GPRS_Power_Active.Write(false);        
+            // End of SIM900 power up.
         }
     }
 }
