@@ -1,6 +1,6 @@
 ﻿#define LCD // set to #undef LCD if no screen is attached to COM2
 #define CELL // Set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
-#undef WEB // set to #undef WEB to disable web server (not yet implemented)
+#define WEB // set to #undef WEB to disable web server (not yet implemented)
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -11,6 +11,7 @@ using SecretLabs.NETMF.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.IO;
+using seeedStudio.SerialLCD;
 
 namespace CellularRemoteControl
 {
@@ -45,8 +46,10 @@ namespace CellularRemoteControl
                 cellularThread.Start();
             #endif
 
-//            var relayThread = new Thread(Relay_thread);
-//            relayThread.Start();
+           #if (WEB)
+                var WebThread = new Thread(Web_thread);
+                WebThread.Start();
+            #endif
 
             Thread.Sleep(Timeout.Infinite);
         }
@@ -104,7 +107,7 @@ namespace CellularRemoteControl
         #if (CELL)
             static void Cellular_thread()
             {
-                seedStudioGSM gprs = new seedStudioGSM();
+                seeedStudioGSM gprs = new seeedStudioGSM();
 
                 // Automatically power up the SIM900.
                 Debug.Print("Powering up Modem");
@@ -126,7 +129,7 @@ namespace CellularRemoteControl
                 Thread.Sleep(5000);
             
                 // Excellent Signal
-                if ((seedStudioGSM.SignalStrength >= 20) && (seedStudioGSM.SignalStrength <= 31))
+                if ((seeedStudioGSM.SignalStrength >= 20) && (seeedStudioGSM.SignalStrength <= 31))
                 {
                     Debug.Print("Signal: Excellent");
                     #if (LCD)
@@ -135,7 +138,7 @@ namespace CellularRemoteControl
                     #endif
                 }
                 // Good Signal
-                if ((seedStudioGSM.SignalStrength >= 13) && (seedStudioGSM.SignalStrength <= 19))
+                if ((seeedStudioGSM.SignalStrength >= 13) && (seeedStudioGSM.SignalStrength <= 19))
                 {
                     Debug.Print("Signal: Good");
                     #if (LCD)
@@ -144,7 +147,7 @@ namespace CellularRemoteControl
                     #endif
                 }
                 // Poor Signal
-                if ((seedStudioGSM.SignalStrength >= 0) && (seedStudioGSM.SignalStrength <= 12))
+                if ((seeedStudioGSM.SignalStrength >= 0) && (seeedStudioGSM.SignalStrength <= 12))
                 {
                     Debug.Print("Signal: Poor");
                     #if (LCD)
@@ -153,7 +156,7 @@ namespace CellularRemoteControl
                     #endif
                 }
                 // No Signal
-                if (seedStudioGSM.SignalStrength == 99)
+                if (seeedStudioGSM.SignalStrength == 99)
                 {
                     Debug.Print("No Signal");
                     #if (LCD)
@@ -176,9 +179,9 @@ namespace CellularRemoteControl
 
                 while (true)
                 {
-                    if (seedStudioGSM.LastMessage > 0)
+                    if (seeedStudioGSM.LastMessage > 0)
                     {
-                       gprs.ReadSMS(seedStudioGSM.LastMessage);
+                       gprs.ReadSMS(seeedStudioGSM.LastMessage);
                        gprs.DeleteAllSMS();
                        if (File.Exists(@"SD\\Temp\\SMS.cmd"))
                        {
@@ -365,6 +368,12 @@ namespace CellularRemoteControl
                     }
                 }
                 return false;
+            }
+        #endif
+
+        #if (WEB)
+            public static void Web_thread()
+            {
             }
         #endif
     }

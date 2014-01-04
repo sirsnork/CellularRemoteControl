@@ -3,7 +3,7 @@ using Microsoft.SPOT;
 using System.IO.Ports;
 using System.Threading;
 
-namespace CellularRemoteControl
+namespace seeedStudio.SerialLCD
 {
     class LCD
     {
