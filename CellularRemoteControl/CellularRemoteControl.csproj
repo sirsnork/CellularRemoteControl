@@ -43,6 +43,9 @@
     <Compile Include="seeedStudioGSM.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Gsiot.Server">
+      <HintPath>..\..\Libraries\Gsiot Samples V1.1 V20130228\4.2_any_Gsiot.Server\Gsiot.Server\bin\Release\Gsiot.Server.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.SPOT.Hardware" />
     <Reference Include="Microsoft.SPOT.Hardware.PWM" />
     <Reference Include="Microsoft.SPOT.Hardware.SerialPort" />

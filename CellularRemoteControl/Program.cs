@@ -17,6 +17,10 @@ using System.IO;
 #if (CELL)
     using seeedStudio.GPRS;
 #endif
+    using Gsiot.Server;
+#if (WEB)
+    
+#endif
 
 namespace CellularRemoteControl
 {
@@ -27,10 +31,10 @@ namespace CellularRemoteControl
         #if (LCD)
             public static byte[] lcdMessageLine1;
             public static byte[] lcdMessageLine2;
-            public static string SW1State = "SW1:Off ";
-            public static string SW2State = "SW2:Off ";
-            public static string SW3State = "SW3:Off ";
-            public static string SW4State = "SW4:Off ";
+            public static string SW1State = "Off ";
+            public static string SW2State = "Off ";
+            public static string SW3State = "Off ";
+            public static string SW4State = "Off ";
         #endif
 
         public static void Main()
@@ -198,7 +202,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 1 was turned On";
                                         #if (LCD)
-                                            SW1State = "SW1:On  ";
+                                            SW1State = "On  ";
                                         #endif
                                     }
                                     else
@@ -211,7 +215,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 1 was turned Off.";
                                         #if (LCD)
-                                            SW1State = "SW1:Off ";
+                                            SW1State = "Off ";
                                         #endif
                                     }
                                     else
@@ -234,7 +238,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 2 was turned On";
                                         #if (LCD)
-                                            SW2State = "SW2:On  ";
+                                            SW2State = "On  ";
                                         #endif
                                     }
                                     else
@@ -247,7 +251,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 2 was turned Off.";
                                         #if (LCD)
-                                            SW2State = "SW2:Off ";
+                                            SW2State = "Off ";
                                         #endif
                                     }
                                     else
@@ -270,7 +274,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 3 was turned On";
                                         #if (LCD)
-                                            SW3State = "SW3:On  ";
+                                            SW3State = "On  ";
                                         #endif
                                     }
                                     else
@@ -283,7 +287,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 3 was turned Off.";
                                         #if (LCD)
-                                            SW3State = "SW3:Off ";
+                                            SW3State = "Off ";
                                         #endif
                                     }
                                     else
@@ -306,7 +310,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 4 was turned On";
                                         #if (LCD)
-                                            SW4State = "SW4:On  ";
+                                            SW4State = "On  ";
                                         #endif
                                     }
                                     else
@@ -319,7 +323,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch 4 was turned Off.";
                                         #if (LCD)
-                                            SW4State = "SW1:Off ";
+                                            SW4State = "Off ";
                                         #endif
                                     }
                                     else
@@ -351,8 +355,8 @@ namespace CellularRemoteControl
                         }
                     }
                     #if (LCD)
-                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes(SW1State + SW2State);
-                        lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes(SW3State + SW4State);
+                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
+                        lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
                     #endif
                     Thread.Sleep(5000);
                 }
@@ -373,6 +377,27 @@ namespace CellularRemoteControl
         #if (WEB)
             public static void Web_thread()
             {
+                var webServer = new HttpServer
+                {
+                    RequestRouting =
+                    {
+                        { "GET /", HandleGetHelloHtml }
+                    }
+                };
+                webServer.Run();
+            }
+            static void HandleGetHelloHtml(RequestHandlerContext context)
+            {   
+                string s =
+                    "<html>\r\n" +
+                    "\t<body>\r\n" +
+                    "\t\tSwitch 1 is <strong>" + SW1State + "</strong><br>\r\n" +
+                    "\t\tSwitch 2 is <strong>" + SW2State + "</strong><br>\r\n" +
+                    "\t\tSwitch 3 is <strong>" + SW3State + "</strong><br>\r\n" +
+                    "\t\tSwitch 4 is <strong>" + SW4State + "</strong><br>\r\n" +
+                    "\t</body>\r\n" +
+                    "</html>";
+                context.SetResponse(s, "text/html");
             }
         #endif
     }
