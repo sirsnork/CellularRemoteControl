@@ -76,15 +76,12 @@ namespace CellularRemoteControl
             {
                 byte[] oldlcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("0");
                 byte[] oldlcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("0");
-                Timer backlightTimer = null;
-                TimerCallback backlightTimeout = null;
 
                 // initialise the LCD display
                 LCD lcd = new LCD("COM2");
 
                 // Timer turns Backlight off after 30 seconds of inactivity
-                backlightTimeout = new TimerCallback(BacklightTimerInterrupt);
-                backlightTimer = new Timer(backlightTimeout, lcd, 0, 30000);
+                Timer backlightTimer = new Timer(BacklightTimerOff, lcd, 0, 30000);
 
                 Thread.Sleep(4000);
 
@@ -119,7 +116,7 @@ namespace CellularRemoteControl
                     Thread.Sleep(1000);
                 }
             }
-            static void BacklightTimerInterrupt(object state)
+            static void BacklightTimerOff(object state)
             {
                 LCD lcd = (LCD)state;
                 lcd.noBacklight();
