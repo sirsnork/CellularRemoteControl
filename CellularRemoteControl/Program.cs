@@ -1,6 +1,15 @@
-﻿#define LCD // set to #undef LCD if no screen is attached to COM2
+﻿#region // Preprocessor code
+
+#define LCD // set to #undef LCD if no screen is attached to COM2
 #define CELL // Set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
-#define WEB // set to #undef WEB to disable web server (not yet implemented)
+#define WEB // set to #undef WEB to disable web server
+
+#if (!CELL && !WEB)
+    #error No network transprt defined
+#endif
+
+#endregion
+
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -17,9 +26,8 @@ using System.IO;
 #if (CELL)
     using seeedStudio.GPRS;
 #endif
-    using Gsiot.Server; // Web Server
 #if (WEB)
-    
+    using Gsiot.Server; // Web Server    
 #endif
 
 namespace CellularRemoteControl
@@ -31,6 +39,8 @@ namespace CellularRemoteControl
         #if (LCD)
             public static byte[] lcdMessageLine1;
             public static byte[] lcdMessageLine2;
+        #endif
+        #if (LCD || WEB)
             public static string SW1State = "Off ";
             public static string SW2State = "Off ";
             public static string SW3State = "Off ";
@@ -381,9 +391,11 @@ namespace CellularRemoteControl
         #if (WEB)
             public static void Web_thread()
             {
-                InterruptPort button = new InterruptPort(Pins.GPIO_PIN_D8, false, Port.ResistorMode.Disabled, Port.InterruptMode.InterruptEdgeBoth);
-                // Create an event handler for the button
-                button.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
+                #if (LCD)
+                    InterruptPort button = new InterruptPort(Pins.GPIO_PIN_D8, false, Port.ResistorMode.Disabled, Port.InterruptMode.InterruptEdgeBoth);
+                    // Create an event handler for the button
+                    button.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
+                #endif
 
                 var webServer = new HttpServer
                 {
@@ -413,7 +425,7 @@ namespace CellularRemoteControl
                 {
                     var IPAddress = "";
                     IPAddress = Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress;
-                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("IP Address:");
+                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  IP Address:");
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes(IPAddress);
                 }
                 private static void button_OnInterrupt(uint port, uint data, DateTime time)
