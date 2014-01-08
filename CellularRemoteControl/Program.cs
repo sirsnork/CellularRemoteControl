@@ -387,7 +387,7 @@ namespace CellularRemoteControl
                         lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
                     #endif
-                    Thread.Sleep(10000);
+                    Thread.Sleep(1000);
                 }
             }
             public static Boolean CheckNumberWhitelist(string CellNumber, string[] CellWhiteList)
