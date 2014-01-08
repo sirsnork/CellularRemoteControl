@@ -75,18 +75,23 @@ namespace CellularRemoteControl
                 WebThread.Start();
             #endif
 
-            while (true)
-            {
-                if (LCDSleep > 0) // This checks if we want to stop updating the LCD for a period of time (like when we display the IP)
+            #if (LCD)
+                while (true)
                 {
-                    Thread.Sleep(200); // Make sure we wait for a single LCD update before pausing the thread
-                    lcdThread.Suspend();
-                    Thread.Sleep(LCDSleep);
-                    lcdThread.Resume();
-                    LCDSleep = 0;
+                    if (LCDSleep > 0) // This checks if we want to stop updating the LCD for a period of time (like when we display the IP)
+                    {
+                        Thread.Sleep(200); // Make sure we wait for a single LCD update before pausing the thread
+                        lcdThread.Suspend();
+                        Thread.Sleep(LCDSleep);
+                        lcdThread.Resume();
+                        LCDSleep = 0;
+                    }
+                    Thread.Sleep(10);
                 }
-                Thread.Sleep(10);
-            }
+            #else
+                Thread.Sleep(Timeout.Infinite);
+            #endif
+
             
         }
         #if (LCD)
