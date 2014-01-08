@@ -528,7 +528,7 @@ namespace CellularRemoteControl
                             lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
                         #endif
 
-
+/*
                     }
 
                     if (Relay.SW1_State())
@@ -571,6 +571,7 @@ namespace CellularRemoteControl
                         Button4On = "true";
                         Button4Off = "false";
                     }
+*/
                     request.SendResponse(@"<html>
                         <head>
                         </head>
@@ -596,9 +597,11 @@ namespace CellularRemoteControl
                         </body>
                         </html>");
                 }
-
-                // Send a file
-                //TrySendFile(request);
+                else
+                {
+                    // Try to send a file
+                    TrySendFile(request);
+                }
             }
 
             /// <summary>
