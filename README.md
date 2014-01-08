@@ -23,15 +23,15 @@ Root
 ```  
 Current commands are:
 
-* SW1_ON      : Turns on D4 Pin
-* SW1_OFF     : Turns off D4 Pin
-* SW1_STATE   : Returns current state of D4 Pin
-* SW2_ON      : Turns on D5 Pin
-* SW2_OFF     : Turns off D5 Pin
-* SW2_STATE   : Returns current state of D5 Pin
-* SW3_ON      : Turns on D6 Pin
-* SW3_OFF     : Turns off D6 Pin
-* SW3_STATE   : Returns current state of D6 Pin
-* SW4_ON      : Turns on D7 Pin
-* SW4_OFF     : Turns off D7 Pin
-* SW4_STATE   : Returns current state of D7 Pin
+* 1+    : Turns on D4 Pin
+* 1-    : Turns off D4 Pin
+* 1?    : Returns current state of D4 Pin
+* 2+    : Turns on D5 Pin
+* 2-    : Turns off D5 Pin
+* 2?    : Returns current state of D5 Pin
+* 3+    : Turns on D6 Pin
+* 3-    : Turns off D6 Pin
+* 3?    : Returns current state of D6 Pin
+* 4+    : Turns on D7 Pin
+* 4-    : Turns off D7 Pin
+* 4?    : Returns current state of D7 Pin
