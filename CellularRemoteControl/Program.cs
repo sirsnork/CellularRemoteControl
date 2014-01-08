@@ -439,7 +439,7 @@ namespace CellularRemoteControl
 
             private static void RequestReceived(Request request)
             {
-
+/*
                 string Button1On = "";
                 string Button1Off = "";
                 string Button2On = "";
@@ -448,7 +448,7 @@ namespace CellularRemoteControl
                 string Button3Off = "";
                 string Button4On = "";
                 string Button4Off = "";
-
+*/
                 // Use this for a really basic check that it's working
                 //request.SendResponse("<html><body><p>Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + "</p><p>Method: " + request.Method + "<br />URL: " + request.URL + "</p></body></html>");
                 Debug.Print("Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + ". Method: " + request.Method + " URL: " + request.URL);
