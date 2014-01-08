@@ -1,4 +1,6 @@
-﻿#region // Preprocessor code
+﻿//TO-DO: Setup blink function for each output, add relay thread for this?
+
+#region // Preprocessor code
 
 #define LCD // set to #undef LCD if no screen is attached to COM2
 #define CELL // Set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
@@ -27,7 +29,7 @@ using System.IO;
     using seeedStudio.GPRS;
 #endif
 #if (WEB)
-    using Gsiot.Server; // Web Server    
+    using NetduinoPlusWebServer; // Web Server    
 #endif
 
 namespace CellularRemoteControl
@@ -45,6 +47,9 @@ namespace CellularRemoteControl
             public static string SW2State = "Off ";
             public static string SW3State = "Off ";
             public static string SW4State = "Off ";
+        #endif
+        #if (WEB)
+            const string WebFolder = "\\SD\\Web";
         #endif
 
         public static void Main()
@@ -113,7 +118,7 @@ namespace CellularRemoteControl
                             lcd.print(lcdMessageLine2);
                         }
                     }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
                 }
             }
             static void BacklightTimerOff(object state)
@@ -208,11 +213,11 @@ namespace CellularRemoteControl
                             {
                                 switch (command[1].Trim().ToUpper())
                                 {
-                                case "SW1_ON":
+                                case "1+":
                                     if (Relay.SW1_On())
                                     {
                                         ReplySMS = "Switch 1 was turned On";
-                                        #if (LCD)
+                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                             SW1State = "On  ";
                                         #endif
                                     }
@@ -221,7 +226,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning On Switch 1";
                                     }
                                     break;
-                                case "SW1_OFF":
+                                case "1-":
                                     if (Relay.SW1_Off())
                                     {
                                         ReplySMS = "Switch 1 was turned Off.";
@@ -234,7 +239,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning Off Switch 1";
                                     }
                                     break;
-                                case "SW1_STATE":
+                                case "1?":
                                     if (Relay.SW1_State())
                                     {
                                         ReplySMS = "Switch 1 is On";
@@ -244,7 +249,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Switch 1 is Off";
                                     }
                                     break;
-                                case "SW2_ON":
+                                case "2+":
                                     if (Relay.SW2_On())
                                     {
                                         ReplySMS = "Switch 2 was turned On";
@@ -257,7 +262,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning On Switch 2";
                                     }
                                     break;
-                                case "SW2_OFF":
+                                case "2-":
                                     if (Relay.SW2_Off())
                                     {
                                         ReplySMS = "Switch 2 was turned Off.";
@@ -270,7 +275,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning Off Switch 2";
                                     }
                                     break;
-                                case "SW2_STATE":
+                                case "2?":
                                     if (Relay.SW2_State())
                                     {
                                         ReplySMS = "Switch 2 is On";
@@ -280,7 +285,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Switch 2 is Off";
                                     }
                                     break;
-                                case "SW3_ON":
+                                case "3+":
                                     if (Relay.SW3_On())
                                     {
                                         ReplySMS = "Switch 3 was turned On";
@@ -293,7 +298,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning On Switch 3";
                                     }
                                     break;
-                                case "SW3_OFF":
+                                case "3-":
                                     if (Relay.SW3_Off())
                                     {
                                         ReplySMS = "Switch 3 was turned Off.";
@@ -306,7 +311,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning Off Switch 3";
                                     }
                                     break;
-                                case "SW3_STATE":
+                                case "3?":
                                     if (Relay.SW3_State())
                                     {
                                         ReplySMS = "Switch 3 is On";
@@ -316,7 +321,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Switch 3 is Off";
                                     }
                                     break;
-                                case "SW4_ON":
+                                case "4+":
                                     if (Relay.SW4_On())
                                     {
                                         ReplySMS = "Switch 4 was turned On";
@@ -329,7 +334,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning On Switch 4";
                                     }
                                     break;
-                                case "SW4_OFF":
+                                case "4-":
                                     if (Relay.SW4_Off())
                                     {
                                         ReplySMS = "Switch 4 was turned Off.";
@@ -342,7 +347,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Error turning Off Switch 4";
                                     }
                                     break;
-                                case "SW4_STATE":
+                                case "4?":
                                     if (Relay.SW4_State())
                                     {
                                         ReplySMS = "Switch 4 is On";
@@ -394,28 +399,10 @@ namespace CellularRemoteControl
                     button.OnInterrupt += new NativeEventHandler(button_OnInterrupt);
                 #endif
 
-                var webServer = new HttpServer
-                {
-                    RequestRouting =
-                    {
-                        { "GET /", HandleGetHelloHtml }
-                    }
-                };
-                webServer.Run();
-            }
+                Listener webServer = new Listener(RequestReceived);
 
-            static void HandleGetHelloHtml(RequestHandlerContext context)
-            {   
-                string s =
-                    "<html>\r\n" +
-                    "\t<body>\r\n" +
-                    "\t\tSwitch 1 is <strong>" + SW1State + "</strong><br>\r\n" +
-                    "\t\tSwitch 2 is <strong>" + SW2State + "</strong><br>\r\n" +
-                    "\t\tSwitch 3 is <strong>" + SW3State + "</strong><br>\r\n" +
-                    "\t\tSwitch 4 is <strong>" + SW4State + "</strong><br>\r\n" +
-                    "\t</body>\r\n" +
-                    "</html>";
-                context.SetResponse(s, "text/html");
+                Thread.Sleep(Timeout.Infinite);
+
             }
             #if (LCD)
                 public static void DisplayIP()
@@ -430,6 +417,186 @@ namespace CellularRemoteControl
                     DisplayIP();
                 }
             #endif
+
+            private static void RequestReceived(Request request)
+            {
+
+                string Button1On = "";
+                string Button1Off = "";
+                string Button2On = "";
+                string Button2Off = "";
+                string Button3On = "";
+                string Button3Off = "";
+                string Button4On = "";
+                string Button4Off = "";
+
+                // Use this for a really basic check that it's working
+                //request.SendResponse("<html><body><p>Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + "</p><p>Method: " + request.Method + "<br />URL: " + request.URL + "</p></body></html>");
+                Debug.Print("Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + ". Method: " + request.Method + " URL: " + request.URL);
+
+                if (request.URL.Substring(0, 9) == "/switches")
+                {
+                    if (request.URL.Length > 9)
+                    {
+                        string[] parameters = request.URL.Substring(request.URL.Length - 3, 3).Split('=');
+                        switch (parameters[0])
+                        {
+                            case "1":
+                                if (parameters[1] == "1")
+                                {
+                                    if (Relay.SW1_On())
+                                        SW1State = "On  ";
+                                }
+                                else if (parameters[1] == "0")
+                                {
+                                    if (Relay.SW1_Off())
+                                        SW1State = "Off ";
+                                }
+                                else
+                                {
+                                }
+                                break;
+                            case "2":
+                                if (parameters[1] == "1")
+                                {
+                                    if (Relay.SW2_On())
+                                        SW2State = "On  ";
+                                }
+                                else if (parameters[1] == "0")
+                                {
+                                    if (Relay.SW2_Off())
+                                        SW2State = "Off ";
+                                }
+                                else
+                                {
+                                }
+                                break;
+                            case "3":
+                                if (parameters[1] == "1")
+                                {
+                                    if (Relay.SW3_On())
+                                        SW3State = "On  ";
+                                }
+                                else if (parameters[1] == "0")
+                                {
+                                    if (Relay.SW3_Off())
+                                        SW3State = "Off ";
+                                }
+                                else
+                                {
+                                }
+                                break;
+                            case "4":
+                                if (parameters[1] == "1")
+                                {
+                                    if (Relay.SW4_On())
+                                        SW4State = "On  ";
+                                }
+                                else if (parameters[1] == "0")
+                                {
+                                    if (Relay.SW4_Off())
+                                        SW4State = "Off ";
+                                }
+                                else
+                                {
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        #if (LCD)
+                            lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
+                            lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
+                        #endif
+
+
+                    }
+
+                    if (Relay.SW1_State())
+                    {
+                        Button1On = "false";
+                        Button1Off = "true";
+                    }
+                    else
+                    {
+                        Button1On = "true";
+                        Button1Off = "false";
+                    }
+                    if (Relay.SW2_State())
+                    {
+                        Button2On = "false";
+                        Button2Off = "true";
+                    }
+                    else
+                    {
+                        Button2On = "true";
+                        Button2Off = "false";
+                    }
+                    if (Relay.SW3_State())
+                    {
+                        Button3On = "false";
+                        Button3Off = "true";
+                    }
+                    else
+                    {
+                        Button3On = "true";
+                        Button3Off = "false";
+                    }
+                    if (Relay.SW4_State())
+                    {
+                        Button4On = "false";
+                        Button4Off = "true";
+                    }
+                    else
+                    {
+                        Button4On = "true";
+                        Button4Off = "false";
+                    }
+                    request.SendResponse(@"<html>
+                        <head>
+                        </head>
+                        <body>
+                        <p>
+                        <input type=""button"" value=""Switch 1 on""
+                        onclick=""window.location.href='/switches?1=1'""/>
+                        <input type=""button"" value=""Switch 1 off""
+                        onclick=""window.location.href='/switches?1=0'""/><br>
+                        <input type=""button"" value=""Switch 2 on""
+                        onclick=""window.location.href='/switches?2=1'""/>
+                        <input type=""button"" value=""Switch 2 off""
+                        onclick=""window.location.href='/switches?2=0'""/><br>
+                        <input type=""button"" value=""Switch 3 on""
+                        onclick=""window.location.href='/switches?3=1'""/>
+                        <input type=""button"" value=""Switch 3 off""
+                        onclick=""window.location.href='/switches?3=0'""/><br>
+                        <input type=""button"" value=""Switch 4 on""
+                        onclick=""window.location.href='/switches?4=1'""/>
+                        <input type=""button"" value=""Switch 4 off""
+                        onclick=""window.location.href='/switches?4=0'""/>
+                        </p>
+                        </body>
+                        </html>");
+                }
+
+                // Send a file
+                //TrySendFile(request);
+            }
+
+            /// <summary>
+            /// Look for a file on the SD card and send it back if it exists
+            /// </summary>
+            /// <param name="request"></param>
+            
+            private static void TrySendFile(Request request)
+            {
+                // Replace / with \
+                string filePath = WebFolder + request.URL.Replace('/', '\\');
+
+                if (File.Exists(filePath))
+                    request.SendFile(filePath);
+                else
+                    request.Send404();
+            }
         #endif
     }
 }
