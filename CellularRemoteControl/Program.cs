@@ -453,7 +453,20 @@ namespace CellularRemoteControl
                 //request.SendResponse("<html><body><p>Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + "</p><p>Method: " + request.Method + "<br />URL: " + request.URL + "</p></body></html>");
                 Debug.Print("Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + ". Method: " + request.Method + " URL: " + request.URL);
 
-                if (request.URL.Substring(0, 9) == "/switches")
+                if (request.URL == "/" || request.URL == "/index.html")
+                {
+                    request.SendResponse(@" <html xmlns=""http://www.w3.org/1999/xhtml"">    
+                        <head>      
+                            <title>Blargh</title>      
+                            <meta http-equiv=""refresh"" content=""0;URL='/switches'"" />    
+                        </head>    
+                        <body> 
+                            <p>Redirecting to <a href=""/switches"">
+                            switches</a>.</p> 
+                        </body>  
+                    </html>");
+                }
+                else if (request.URL.Substring(0, 9) == "/switches")
                 {
                     if (request.URL.Length > 9)
                     {
@@ -527,10 +540,8 @@ namespace CellularRemoteControl
                             lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
                             lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
                         #endif
-
-/*
                     }
-
+/*
                     if (Relay.SW1_State())
                     {
                         Button1On = "false";

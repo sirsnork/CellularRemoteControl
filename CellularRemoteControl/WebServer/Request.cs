@@ -103,6 +103,9 @@ namespace NetduinoPlusWebServer
                     case "gif":
                         type = "image/gif";
                         break;
+                    case "html":
+                        type = "text/html";
+                        break;
                     // Not exhaustive. Extend this list as required.
                 }
 
