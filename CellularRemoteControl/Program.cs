@@ -29,7 +29,7 @@ using System.IO;
     using seeedStudio.GPRS;
 #endif
 #if (WEB)
-    using NetduinoPlusWebServer; // Web Server    
+    using NetduinoPlusWebServer;
 #endif
 
 namespace CellularRemoteControl
@@ -47,6 +47,7 @@ namespace CellularRemoteControl
             public static string SW2State = "Off ";
             public static string SW3State = "Off ";
             public static string SW4State = "Off ";
+            public static int LCDSleep = 0;
         #endif
         #if (WEB)
             const string WebFolder = "\\SD\\Web";
@@ -74,7 +75,19 @@ namespace CellularRemoteControl
                 WebThread.Start();
             #endif
 
-            Thread.Sleep(Timeout.Infinite);
+            while (true)
+            {
+                if (LCDSleep > 0) // This checks if we want to stop updating the LCD for a period of time (like when we display the IP)
+                {
+                    Thread.Sleep(200); // Make sure we wait for a single LCD update before pausing the thread
+                    lcdThread.Suspend();
+                    Thread.Sleep(LCDSleep);
+                    lcdThread.Resume();
+                    LCDSleep = 0;
+                }
+                Thread.Sleep(10);
+            }
+            
         }
         #if (LCD)
             static void LCD_thread()
@@ -118,7 +131,7 @@ namespace CellularRemoteControl
                             lcd.print(lcdMessageLine2);
                         }
                     }
-                    Thread.Sleep(500);
+                    Thread.Sleep(200);
                 }
             }
             static void BacklightTimerOff(object state)
@@ -411,6 +424,7 @@ namespace CellularRemoteControl
                     IPAddress = Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress;
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  IP Address:");
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes(IPAddress);
+                    LCDSleep = 10000;
                 }
                 private static void button_OnInterrupt(uint port, uint data, DateTime time)
                 {
