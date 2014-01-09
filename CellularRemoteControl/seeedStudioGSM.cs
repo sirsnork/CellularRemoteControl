@@ -249,7 +249,6 @@ namespace seeedStudio.GPRS
             PrintEnd();
             Thread.Sleep(500);
         }
-
         public void SendSMS(string msisdn, string message)
         {
             try
@@ -267,7 +266,6 @@ namespace seeedStudio.GPRS
                 Debug.Print("SendSMS : " + ecx.Message.ToString());
             }
         }
-        
         public void ReadSMS(int indexSMS)
         {
             try
@@ -283,7 +281,6 @@ namespace seeedStudio.GPRS
                 Debug.Print("ReadSMS : " + ecx.Message.ToString());
             }
         }
-
         public void DeleteAllSMS()
         {
             try
@@ -317,7 +314,6 @@ namespace seeedStudio.GPRS
                 Debug.Print("SIM900_FirmwareVersion : " + ecx.Message.ToString());
             }
         }
-
         public void SIM900_SignalQuality()
         {
             try
@@ -333,7 +329,7 @@ namespace seeedStudio.GPRS
                 Debug.Print("SIM900_SignalQuality : " + ecx.Message.ToString());
             }
         }
-        public void SIM900_GetTime()
+        public void SIM900_SetTime()
         {
             try
             {
@@ -442,12 +438,13 @@ namespace seeedStudio.GPRS
             }
             return ret;   // return the result to caller
         }
+
         public void TogglePower()
         {
             // Automatically power up the SIM900.
             Debug.Print("Powering up Modem");
             _GPRS_Power_Active.Write(true);
-            Thread.Sleep(2500);
+            Thread.Sleep(2000);
             _GPRS_Power_Active.Write(false);        
             // End of SIM900 power up.
         }

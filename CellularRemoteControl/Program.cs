@@ -164,7 +164,9 @@ namespace CellularRemoteControl
                 gprs.SIM900_SignalQuality();
 
                 Thread.Sleep(5000);
-            
+
+                gprs.SIM900_SetTime();
+
                 // Excellent Signal
                 if ((seeedStudioGSM.SignalStrength >= 20) && (seeedStudioGSM.SignalStrength <= 31))
                 {
@@ -204,7 +206,6 @@ namespace CellularRemoteControl
 
                 gprs.InitializeSMS();
                 gprs.DeleteAllSMS();
-                gprs.SIM900_GetTime();
 
                 // File containing Cellphone number to send initialization SMS too
                 string NumCellDefault = FileTools.ReadString("settings\\NumCellDefault.txt");
