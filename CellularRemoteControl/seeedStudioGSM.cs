@@ -25,9 +25,8 @@ namespace seeedStudio.GPRS
 
         public static int LastMessage=0;
         public static int SignalStrength = 0;
-        public static int SMSIncoming = 0;
 
-        public static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
+        private static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
 
         public seeedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
@@ -137,7 +136,7 @@ namespace seeedStudio.GPRS
             byte[] bytesToSend = encoder.GetBytes(line);
             serialPort.Write(bytesToSend, 0, bytesToSend.Length);
         }
-        public  void PrintLine(string line, bool awaitResponse = false, string awaitResponseString = "")
+        private void PrintLine(string line, bool awaitResponse = false, string awaitResponseString = "")
         {
             if (!awaitResponseString.Equals(""))
             {
@@ -403,7 +402,7 @@ namespace seeedStudio.GPRS
         }
 
         // set the system's date and time from a string in this format:  "+CCLK: yy/MM/dd,hh:mm:ss+zz" maybe, not sure if the +CCLK will be here
-        public static void SetDateTime(string dts)
+        private static void SetDateTime(string dts)
         {
             var year = 2000 + Str2Int(dts, 19);      // convert each of the numbers
             var month = Str2Int(dts, 22);
@@ -425,7 +424,7 @@ namespace seeedStudio.GPRS
         }
 
         // convert a string to an "int"  stops at the end-of-string, or at the first non-digit found
-        public static int Str2Int(string input, int offset)
+        private static int Str2Int(string input, int offset)
         {
             int ret = 0;   // built the result here
             for (int i = offset; i < input.Length; i++)  // stop when all chars have been processed
