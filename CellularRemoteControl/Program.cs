@@ -56,7 +56,7 @@ namespace CellularRemoteControl
         public static void Main()
         {
             // Power cycle the shields
-            Thread.Sleep(200); // Don't bounce power to the shields too fast
+            Thread.Sleep(500); // Don't bounce power to the shields too fast
             _shieldPower.Write(true);
             Thread.Sleep(700); // Let the shields come up before trying to access them
 
@@ -151,7 +151,7 @@ namespace CellularRemoteControl
             {
                 seeedStudioGSM gprs = new seeedStudioGSM();
 
-                gprs.TogglePower();
+                seeedStudioGSM.SIM900_TogglePower(); // If this actually powers down the modem we catch the power down message and TogglePower again through the DataHandler
 
                 #if (LCD)
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Initializing");
@@ -159,13 +159,13 @@ namespace CellularRemoteControl
                 #endif
 
                 Thread.Sleep(20000);
-            
-                gprs.SIM900_FirmwareVersion();
-                gprs.SIM900_SignalQuality();
+
+                seeedStudioGSM.SIM900_FirmwareVersion();
+                seeedStudioGSM.SIM900_SignalQuality();
 
                 Thread.Sleep(5000);
 
-                gprs.SIM900_SetTime();
+                seeedStudioGSM.SIM900_SetTime();
 
                 // Excellent Signal
                 if ((seeedStudioGSM.SignalStrength >= 20) && (seeedStudioGSM.SignalStrength <= 31))
@@ -424,7 +424,7 @@ namespace CellularRemoteControl
 
             }
             #if (LCD)
-                public static void DisplayIP()
+                private static void DisplayIP()
                 {
                     var IPAddress = "";
                     IPAddress = Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress;

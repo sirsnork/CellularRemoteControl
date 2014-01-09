@@ -112,6 +112,10 @@ namespace seeedStudio.GPRS
                             SetDateTime(sTime[0] + "\",\"" + sTime[1]);
                             Debug.Print("Date: " + DateTime.Now.ToString());
                         }
+                        if (output.ToString().IndexOf("NORMAL POWER DOWN") > -1)
+                        {
+                            SIM900_TogglePower();
+                        }
                     }
                     output.Clear();
                     awaitingResponse = false;
@@ -298,7 +302,7 @@ namespace seeedStudio.GPRS
 
         }
 
-        public void SIM900_FirmwareVersion()
+        public static void SIM900_FirmwareVersion()
         {
             try
             {
@@ -313,7 +317,7 @@ namespace seeedStudio.GPRS
                 Debug.Print("SIM900_FirmwareVersion : " + ecx.Message.ToString());
             }
         }
-        public void SIM900_SignalQuality()
+        public static void SIM900_SignalQuality()
         {
             try
             {
@@ -328,7 +332,7 @@ namespace seeedStudio.GPRS
                 Debug.Print("SIM900_SignalQuality : " + ecx.Message.ToString());
             }
         }
-        public void SIM900_SetTime()
+        public static void SIM900_SetTime()
         {
             try
             {
@@ -344,6 +348,15 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("SIM900_GetTime : " + ecx.Message.ToString());
             }
+        }
+        public static void SIM900_TogglePower()
+        {
+            // Automatically power up the SIM900.
+            Debug.Print("Toggling Modem Power");
+            _GPRS_Power_Active.Write(true);
+            Thread.Sleep(2000);
+            _GPRS_Power_Active.Write(false);
+            // End of SIM900 power up.
         }
 
         public void placeCall(string msisdn)
@@ -436,16 +449,6 @@ namespace seeedStudio.GPRS
                 ret = n + 10 * ret;     // accumulate the result
             }
             return ret;   // return the result to caller
-        }
-
-        public void TogglePower()
-        {
-            // Automatically power up the SIM900.
-            Debug.Print("Powering up Modem");
-            _GPRS_Power_Active.Write(true);
-            Thread.Sleep(2000);
-            _GPRS_Power_Active.Write(false);        
-            // End of SIM900 power up.
         }
     }
 }
