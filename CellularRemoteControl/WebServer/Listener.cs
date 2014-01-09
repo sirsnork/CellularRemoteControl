@@ -48,7 +48,7 @@ namespace NetduinoPlusWebServer
                     Debug.Print("Received request from " + clientIP.ToString());
                     var x = clientSocket.RemoteEndPoint;
 
-                    Thread.Sleep(50); // This stops the webserver occasionally returning zero byte responses
+                    Thread.Sleep(20); // This stops the webserver occasionally returning zero byte responses
 
                     int availableBytes = clientSocket.Available;
                     Debug.Print(DateTime.Now.ToString() + " " + availableBytes.ToString() + " request bytes available");
