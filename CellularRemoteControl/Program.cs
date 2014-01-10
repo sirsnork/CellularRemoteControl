@@ -43,10 +43,7 @@ namespace CellularRemoteControl
             public static byte[] lcdMessageLine2;
         #endif
         #if (LCD || WEB)
-            public static string SW1State = "Off ";
-            public static string SW2State = "Off ";
-            public static string SW3State = "Off ";
-            public static string SW4State = "Off ";
+            public static string[] SWState = { "Off ", "Off ", "Off ", "Off " };
             public static int LCDSleep = 0;
         #endif
         #if (WEB)
@@ -56,7 +53,7 @@ namespace CellularRemoteControl
         public static void Main()
         {
             // Power cycle the shields
-            Thread.Sleep(500); // Don't bounce power to the shields too fast
+            Thread.Sleep(200); // Don't bounce power to the shields too fast
             _shieldPower.Write(true);
             Thread.Sleep(700); // Let the shields come up before trying to access them
 
@@ -237,14 +234,7 @@ namespace CellularRemoteControl
                                         ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
 
                                         #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 1)
-                                                SW1State = "On  ";
-                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 2)
-                                                SW2State = "On  ";
-                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 3)
-                                                SW3State = "On  ";
-                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 4)
-                                                SW4State = "On  ";
+                                            SWState[Str2Int(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
                                         #endif
                                     }
                                     else
@@ -259,14 +249,7 @@ namespace CellularRemoteControl
                                     {
                                         ReplySMS = "Switch " + Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
                                         #if (LCD)
-                                            if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 1)
-                                                SW1State = "Off ";
-                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 2)
-                                                SW2State = "Off ";
-                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 3)
-                                                SW3State = "Off ";
-                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 4)
-                                                SW4State = "Off ";
+                                            SWState[Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) - 1] = "Off ";
                                         #endif
                                     }
                                     else
@@ -300,8 +283,8 @@ namespace CellularRemoteControl
                         }
                     }
                     #if (LCD)
-                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
-                        lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
+                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SWState[0] + "SW2:" + SWState[1]);
+                        lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SWState[2] + "SW4:" + SWState[3]);
                     #endif
                     Thread.Sleep(1000);
                 }
@@ -386,33 +369,20 @@ namespace CellularRemoteControl
                         {
                             if (Relay.On(Str2Int(parameters[0])))
                             {
-                                if (Str2Int(parameters[0]) == 1)
-                                    SW1State = "On  ";
-                                else if (Str2Int(parameters[0]) == 2)
-                                    SW2State = "On  ";
-                                else if (Str2Int(parameters[0]) == 3)
-                                    SW3State = "On  ";
-                                else if (Str2Int(parameters[0]) == 4)
-                                    SW4State = "On  ";
+                                SWState[Str2Int(parameters[0]) - 1] = "On  ";
                             }
+
                         }
                         else if (Str2Int(parameters[1]) == 0)
                         {
                             if (Relay.Off(Str2Int(parameters[0])))
                             {
-                                if (Str2Int(parameters[0]) == 1)
-                                    SW1State = "Off ";
-                                else if (Str2Int(parameters[0]) == 2)
-                                    SW2State = "Off ";
-                                else if (Str2Int(parameters[0]) == 3)
-                                    SW3State = "Off ";
-                                else if (Str2Int(parameters[0]) == 4)
-                                    SW4State = "Off ";
+                                SWState[Str2Int(parameters[0]) - 1] = "Off ";
                             }
                         }
                         #if (LCD)
-                            lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
-                            lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
+                            lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SWState[0] + "SW2:" + SWState[1]);
+                            lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SWState[2] + "SW4:" + SWState[3]);
                         #endif
                     }
 
