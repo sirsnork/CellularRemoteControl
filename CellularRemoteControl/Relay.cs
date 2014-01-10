@@ -17,145 +17,135 @@ namespace CellularRemoteControl
         public Relay()
         {
         }
-
-        public static Boolean SW1_On()
+        public static Boolean On(int Switch)
         {
-            relay1.Write(true);
-            if (relay1.Read())
+            switch (Switch)
             {
-                Debug.Print("Switch 1 On.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning on Switch 1.");
-                return false;
+                case 1:
+                    relay1.Write(true);
+                    if (relay1.Read())
+                    {
+                        Debug.Print("Switch 1 On.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning on Switch 1.");
+                        return false;
+                    }
+                case 2:
+                    relay2.Write(true);
+                    if (relay2.Read())
+                    {
+                        Debug.Print("Switch 2 On.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning on Switch 2.");
+                        return false;
+                    }
+                case 3:
+                    relay3.Write(true);
+                    if (relay3.Read())
+                    {
+                        Debug.Print("Switch 3 On.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning on Switch 3.");
+                        return false;
+                    }
+                case 4:
+                    relay4.Write(true);
+                    if (relay4.Read())
+                    {
+                        Debug.Print("Switch 4 On.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning on Switch 4.");
+                        return false;
+                    }
+                default:
+                    return false;
             }
         }
 
-        public static Boolean SW1_Off()
+        public static Boolean Off(int Switch)
         {
-            relay1.Write(false);
-            if (!relay1.Read())
+            switch (Switch)
             {
-                Debug.Print("Switch 1 Off.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning off Switch 1.");
-                return false;
+                case 1:
+                    relay1.Write(false);
+                    if (!relay1.Read())
+                    {
+                        Debug.Print("Switch " + Switch + " Off.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning off Switch " + Switch + ".");
+                        return false;
+                    }
+                case 2:
+                    relay2.Write(false);
+                    if (!relay2.Read())
+                    {
+                        Debug.Print("Switch " + Switch + " Off.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning off Switch " + Switch + ".");
+                        return false;
+                    }
+                case 3:
+                    relay3.Write(false);
+                    if (!relay3.Read())
+                    {
+                        Debug.Print("Switch " + Switch + " Off.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning off Switch " + Switch + ".");
+                        return false;
+                    }
+                case 4:
+                    relay4.Write(false);
+                    if (!relay4.Read())
+                    {
+                        Debug.Print("Switch " + Switch + " Off.");
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Print("Problem turning off Switch " + Switch + ".");
+                        return false;
+                    }
+                default:
+                    return false;
             }
         }
 
-        public static Boolean SW1_State()
+        public static Boolean State(int Switch)
         {
-            return relay1.Read();
-        }
-
-        public static Boolean SW2_On()
-        {
-            relay2.Write(true);
-            if (relay2.Read())
+            switch (Switch)
             {
-                Debug.Print("Switch 2 On.");
-                return true;
+                case 1:
+                    return relay1.Read();
+                case 2:
+                    return relay2.Read();
+                case 3:
+                    return relay3.Read();
+                case 4:
+                    return relay4.Read();
+                default:
+                    return false;
             }
-            else
-            {
-                Debug.Print("Problem turning on Switch 2.");
-                return false;
-            }
-        }
-
-        public static Boolean SW2_Off()
-        {
-            relay2.Write(false);
-            if (!relay2.Read())
-            {
-                Debug.Print("Switch 2 Off.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning off Switch 2.");
-                return false;
-            }
-        }
-
-        public static Boolean SW2_State()
-        {
-            return relay2.Read();
-        }
-
-        public static Boolean SW3_On()
-        {
-            relay3.Write(true);
-            if (relay3.Read())
-            {
-                Debug.Print("Switch 3 On.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning on Switch 3.");
-                return false;
-            }
-        }
-
-        public static Boolean SW3_Off()
-        {
-            relay3.Write(false);
-            if (!relay3.Read())
-            {
-                Debug.Print("Switch 3 Off.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning off Switch 3.");
-                return false;
-            }
-        }
-
-        public static Boolean SW3_State()
-        {
-            return relay3.Read();
-        }
-
-        public static Boolean SW4_On()
-        {
-            relay4.Write(true);
-            if (relay4.Read())
-            {
-                Debug.Print("Switch 4 On.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning on Switch 4.");
-                return false;
-            }
-        }
-
-        public static Boolean SW4_Off()
-        {
-            relay4.Write(false);
-            if (!relay4.Read())
-            {
-                Debug.Print("Switch 4 Off.");
-                return true;
-            }
-            else
-            {
-                Debug.Print("Problem turning off Switch 4.");
-                return false;
-            }
-        }
-
-        public static Boolean SW4_State()
-        {
-            return relay4.Read();
         }
     }
 }

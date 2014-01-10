@@ -23,7 +23,7 @@ namespace seeedStudio.GPRS
         static byte[] buffer = new Byte[bufferMax];
         static StringBuilder output = new StringBuilder();
 
-        public static int LastMessage=0;
+        public static int LastMessage = 0;
         public static int SignalStrength = 0;
 
         private static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
@@ -83,7 +83,7 @@ namespace seeedStudio.GPRS
                         {
                             Debug.Print("New Message received.");
                             string[] sCMTI = output.ToString().Split(',');
-                            LastMessage = int.Parse (FileTools.strMID(sCMTI[1],0,sCMTI[1].Length-2));
+                            LastMessage = int.Parse(FileTools.strMID(sCMTI[1], 0, sCMTI[1].Length - 2));
                             Thread.Sleep(1000);
                         }
 
@@ -302,7 +302,7 @@ namespace seeedStudio.GPRS
 
         }
 
-        public static void SIM900_FirmwareVersion()
+        public void SIM900_FirmwareVersion()
         {
             try
             {
@@ -317,7 +317,7 @@ namespace seeedStudio.GPRS
                 Debug.Print("SIM900_FirmwareVersion : " + ecx.Message.ToString());
             }
         }
-        public static void SIM900_SignalQuality()
+        public void SIM900_SignalQuality()
         {
             try
             {
@@ -332,7 +332,7 @@ namespace seeedStudio.GPRS
                 Debug.Print("SIM900_SignalQuality : " + ecx.Message.ToString());
             }
         }
-        public static void SIM900_SetTime()
+        public void SIM900_SetTime()
         {
             try
             {

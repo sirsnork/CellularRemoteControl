@@ -160,12 +160,12 @@ namespace CellularRemoteControl
 
                 Thread.Sleep(20000);
 
-                seeedStudioGSM.SIM900_FirmwareVersion();
-                seeedStudioGSM.SIM900_SignalQuality();
+                gprs.SIM900_FirmwareVersion();
+                gprs.SIM900_SignalQuality();
 
                 Thread.Sleep(5000);
 
-                seeedStudioGSM.SIM900_SetTime();
+                gprs.SIM900_SetTime();
 
                 // Excellent Signal
                 if ((seeedStudioGSM.SignalStrength >= 20) && (seeedStudioGSM.SignalStrength <= 31))
@@ -219,10 +219,10 @@ namespace CellularRemoteControl
                 {
                     if (seeedStudioGSM.LastMessage > 0)
                     {
-                       gprs.ReadSMS(seeedStudioGSM.LastMessage);
-                       gprs.DeleteAllSMS();
-                       if (File.Exists(@"SD\\Temp\\SMS.cmd"))
-                       {
+                        gprs.ReadSMS(seeedStudioGSM.LastMessage);
+                        gprs.DeleteAllSMS();
+                        if (File.Exists(@"SD\\Temp\\SMS.cmd"))
+                        {
                             string ReplySMS = "";
                             string[] command = FileTools.ReadString("Temp\\SMS.cmd").Split(';');
                             File.Delete(@"SD\\Temp\\SMS.cmd");
@@ -230,160 +230,70 @@ namespace CellularRemoteControl
 
                             if (CheckNumberWhitelist(command[0], CellWhitelist)) // Make sure incoming message was sent from allowed number
                             {
-                                switch (command[1].Trim().ToUpper())
+                                if (command[1].Trim().ToUpper().Substring(1,1) == "+")
                                 {
-                                case "1+":
-                                    if (Relay.SW1_On())
+                                    if (Relay.On(Str2Int(command[1].Trim().ToUpper().Substring(0,1))))
                                     {
-                                        ReplySMS = "Switch 1 was turned On";
+                                        ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
+
                                         #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            SW1State = "On  ";
+                                            if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 1)
+                                                SW1State = "On  ";
+                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 2)
+                                                SW2State = "On  ";
+                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 3)
+                                                SW3State = "On  ";
+                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0,1)) == 4)
+                                                SW4State = "On  ";
                                         #endif
                                     }
                                     else
                                     {
-                                        ReplySMS = "Error turning On Switch 1";
+                                        ReplySMS = "Error turning On Switch " + command[1].Trim().ToUpper().Substring(0,1) ;
                                     }
-                                    break;
-                                case "1-":
-                                    if (Relay.SW1_Off())
+
+                                }
+                                else if (command[1].Trim().ToUpper().Substring(1,1) == "-")
+                                {
+                                    if (Relay.Off(Str2Int(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
-                                        ReplySMS = "Switch 1 was turned Off.";
+                                        ReplySMS = "Switch " + Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
                                         #if (LCD)
-                                            SW1State = "Off ";
+                                            if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 1)
+                                                SW1State = "Off ";
+                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 2)
+                                                SW2State = "Off ";
+                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 3)
+                                                SW3State = "Off ";
+                                            else if (Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) == 4)
+                                                SW4State = "Off ";
                                         #endif
                                     }
                                     else
                                     {
-                                        ReplySMS = "Error turning Off Switch 1";
+                                        ReplySMS = "Error turning Off Switch " + command[1].Trim().ToUpper().Substring(0, 1);
                                     }
-                                    break;
-                                case "1?":
-                                    if (Relay.SW1_State())
+
+                                }
+                                else if (command[1].Trim().ToUpper().Substring(1, 1) == "?")
+                                {
+                                    if (Relay.State(Str2Int(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
-                                        ReplySMS = "Switch 1 is On";
+                                        ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is On";
                                     }
                                     else
                                     {
-                                        ReplySMS = "Switch 1 is Off";
+                                        ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is Off";
                                     }
-                                    break;
-                                case "2+":
-                                    if (Relay.SW2_On())
-                                    {
-                                        ReplySMS = "Switch 2 was turned On";
-                                        #if (LCD)
-                                            SW2State = "On  ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Error turning On Switch 2";
-                                    }
-                                    break;
-                                case "2-":
-                                    if (Relay.SW2_Off())
-                                    {
-                                        ReplySMS = "Switch 2 was turned Off.";
-                                        #if (LCD)
-                                            SW2State = "Off ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Error turning Off Switch 2";
-                                    }
-                                    break;
-                                case "2?":
-                                    if (Relay.SW2_State())
-                                    {
-                                        ReplySMS = "Switch 2 is On";
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Switch 2 is Off";
-                                    }
-                                    break;
-                                case "3+":
-                                    if (Relay.SW3_On())
-                                    {
-                                        ReplySMS = "Switch 3 was turned On";
-                                        #if (LCD)
-                                            SW3State = "On  ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Error turning On Switch 3";
-                                    }
-                                    break;
-                                case "3-":
-                                    if (Relay.SW3_Off())
-                                    {
-                                        ReplySMS = "Switch 3 was turned Off.";
-                                        #if (LCD)
-                                            SW3State = "Off ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Error turning Off Switch 3";
-                                    }
-                                    break;
-                                case "3?":
-                                    if (Relay.SW3_State())
-                                    {
-                                        ReplySMS = "Switch 3 is On";
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Switch 3 is Off";
-                                    }
-                                    break;
-                                case "4+":
-                                    if (Relay.SW4_On())
-                                    {
-                                        ReplySMS = "Switch 4 was turned On";
-                                        #if (LCD)
-                                            SW4State = "On  ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Error turning On Switch 4";
-                                    }
-                                    break;
-                                case "4-":
-                                    if (Relay.SW4_Off())
-                                    {
-                                        ReplySMS = "Switch 4 was turned Off.";
-                                        #if (LCD)
-                                            SW4State = "Off ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Error turning Off Switch 4";
-                                    }
-                                    break;
-                                case "4?":
-                                    if (Relay.SW4_State())
-                                    {
-                                        ReplySMS = "Switch 4 is On";
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = "Switch 4 is Off";
-                                    }
-                                    break;
-                                default:
-                                       ReplySMS = "";
-                                       Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
-                                       gprs.SendSMS(command[0], "Unknown command from " + command[0] + ": " + command[1]);
-                                       break;
-                               }
-                               if (ReplySMS.Length > 0)
-                                   gprs.SendSMS(command[0], ReplySMS);
+                                }
+                                else
+                                {
+                                    ReplySMS = "";
+                                    Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
+                                    gprs.SendSMS(command[0], "Unknown command from " + command[0] + ": " + command[1]);
+                                }
+                                if (ReplySMS.Length > 0)
+                                    gprs.SendSMS(command[0], ReplySMS);
                            }
                            else
                                Debug.Print(command[0] + " not in whitelist, message ignored");
@@ -472,118 +382,40 @@ namespace CellularRemoteControl
                     if (request.URL.Length > 9)
                     {
                         string[] parameters = request.URL.Substring(request.URL.Length - 3, 3).Split('=');
-                        switch (parameters[0])
+                        if (Str2Int(parameters[1]) == 1)
                         {
-                            case "1":
-                                if (parameters[1] == "1")
-                                {
-                                    if (Relay.SW1_On())
-                                        SW1State = "On  ";
-                                }
-                                else if (parameters[1] == "0")
-                                {
-                                    if (Relay.SW1_Off())
-                                        SW1State = "Off ";
-                                }
-                                else
-                                {
-                                }
-                                break;
-                            case "2":
-                                if (parameters[1] == "1")
-                                {
-                                    if (Relay.SW2_On())
-                                        SW2State = "On  ";
-                                }
-                                else if (parameters[1] == "0")
-                                {
-                                    if (Relay.SW2_Off())
-                                        SW2State = "Off ";
-                                }
-                                else
-                                {
-                                }
-                                break;
-                            case "3":
-                                if (parameters[1] == "1")
-                                {
-                                    if (Relay.SW3_On())
-                                        SW3State = "On  ";
-                                }
-                                else if (parameters[1] == "0")
-                                {
-                                    if (Relay.SW3_Off())
-                                        SW3State = "Off ";
-                                }
-                                else
-                                {
-                                }
-                                break;
-                            case "4":
-                                if (parameters[1] == "1")
-                                {
-                                    if (Relay.SW4_On())
-                                        SW4State = "On  ";
-                                }
-                                else if (parameters[1] == "0")
-                                {
-                                    if (Relay.SW4_Off())
-                                        SW4State = "Off ";
-                                }
-                                else
-                                {
-                                }
-                                break;
-                            default:
-                                break;
+                            if (Relay.On(Str2Int(parameters[0])))
+                            {
+                                if (Str2Int(parameters[0]) == 1)
+                                    SW1State = "On  ";
+                                else if (Str2Int(parameters[0]) == 2)
+                                    SW2State = "On  ";
+                                else if (Str2Int(parameters[0]) == 3)
+                                    SW3State = "On  ";
+                                else if (Str2Int(parameters[0]) == 4)
+                                    SW4State = "On  ";
+                            }
+                        }
+                        else if (Str2Int(parameters[1]) == 0)
+                        {
+                            if (Relay.Off(Str2Int(parameters[0])))
+                            {
+                                if (Str2Int(parameters[0]) == 1)
+                                    SW1State = "Off ";
+                                else if (Str2Int(parameters[0]) == 2)
+                                    SW2State = "Off ";
+                                else if (Str2Int(parameters[0]) == 3)
+                                    SW3State = "Off ";
+                                else if (Str2Int(parameters[0]) == 4)
+                                    SW4State = "Off ";
+                            }
                         }
                         #if (LCD)
                             lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("SW1:" + SW1State + "SW2:" + SW2State);
                             lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("SW3:" + SW3State + "SW4:" + SW4State);
                         #endif
                     }
-/*
-                    if (Relay.SW1_State())
-                    {
-                        Button1On = "false";
-                        Button1Off = "true";
-                    }
-                    else
-                    {
-                        Button1On = "true";
-                        Button1Off = "false";
-                    }
-                    if (Relay.SW2_State())
-                    {
-                        Button2On = "false";
-                        Button2Off = "true";
-                    }
-                    else
-                    {
-                        Button2On = "true";
-                        Button2Off = "false";
-                    }
-                    if (Relay.SW3_State())
-                    {
-                        Button3On = "false";
-                        Button3Off = "true";
-                    }
-                    else
-                    {
-                        Button3On = "true";
-                        Button3Off = "false";
-                    }
-                    if (Relay.SW4_State())
-                    {
-                        Button4On = "false";
-                        Button4Off = "true";
-                    }
-                    else
-                    {
-                        Button4On = "true";
-                        Button4Off = "false";
-                    }
-*/
+
                     request.SendResponse(@"<html>
                         <head>
                         </head>
@@ -632,5 +464,19 @@ namespace CellularRemoteControl
                     request.Send404();
             }
         #endif
+        // convert a string to an "int"  stops at the end-of-string, or at the first non-digit found
+        public static int Str2Int(string input, int offset = 0)
+        {
+            int ret = 0;   // built the result here
+            for (int i = offset; i < input.Length; i++)  // stop when all chars have been processed
+            {
+                char c = input[i];      // get the next char
+                if (c < '0') break;     // stop if a non-number is found
+                if (c > '9') break;
+                int n = (int)c - 48;    // convert the ascii value to a number, IE '1' = 49
+                ret = n + 10 * ret;     // accumulate the result
+            }
+            return ret;   // return the result to caller
+        }
     }
 }
