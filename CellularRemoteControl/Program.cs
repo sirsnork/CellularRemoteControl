@@ -177,7 +177,7 @@ namespace CellularRemoteControl
                     #endif
                 }
                 // Good Signal
-                if ((seeedStudioGSM.SignalStrength >= 13) && (seeedStudioGSM.SignalStrength <= 19))
+                else if ((seeedStudioGSM.SignalStrength >= 13) && (seeedStudioGSM.SignalStrength <= 19))
                 {
                     Debug.Print("Signal: Good");
                     #if (LCD)
@@ -185,7 +185,7 @@ namespace CellularRemoteControl
                     #endif
                 }
                 // Poor Signal
-                if ((seeedStudioGSM.SignalStrength >= 0) && (seeedStudioGSM.SignalStrength <= 12))
+                else if ((seeedStudioGSM.SignalStrength >= 0) && (seeedStudioGSM.SignalStrength <= 12))
                 {
                     Debug.Print("Signal: Poor");
                     #if (LCD)
@@ -193,11 +193,18 @@ namespace CellularRemoteControl
                     #endif
                 }
                 // No Signal
-                if (seeedStudioGSM.SignalStrength == 99)
+                else if (seeedStudioGSM.SignalStrength == 99)
                 {
                     Debug.Print("No Signal");
                     #if (LCD)
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("      None");
+                    #endif
+                }
+                else
+                {
+                    Debug.Print("Unknown Signal");
+                    #if (LCD)
+                        lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Unknown");
                     #endif
                 }
 
@@ -333,25 +340,13 @@ namespace CellularRemoteControl
 
             private static void RequestReceived(Request request)
             {
-/*
-                string Button1On = "";
-                string Button1Off = "";
-                string Button2On = "";
-                string Button2Off = "";
-                string Button3On = "";
-                string Button3Off = "";
-                string Button4On = "";
-                string Button4Off = "";
-*/
-                // Use this for a really basic check that it's working
-                //request.SendResponse("<html><body><p>Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + "</p><p>Method: " + request.Method + "<br />URL: " + request.URL + "</p></body></html>");
                 Debug.Print("Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + ". Method: " + request.Method + " URL: " + request.URL);
 
                 if (request.URL == "/" || request.URL == "/index.html")
                 {
                     request.SendResponse(@" <html xmlns=""http://www.w3.org/1999/xhtml"">    
                         <head>      
-                            <title>Blargh</title>      
+                            <title>Switches</title>      
                             <meta http-equiv=""refresh"" content=""0;URL='/switches'"" />    
                         </head>    
                         <body> 
