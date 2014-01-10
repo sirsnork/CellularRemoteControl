@@ -103,7 +103,7 @@ namespace CellularRemoteControl
                 // Timer turns Backlight off after 30 seconds of inactivity
                 Timer backlightTimer = new Timer(BacklightTimerOff, lcd, 0, 30000);
 
-                Thread.Sleep(4000);
+                Thread.Sleep(500);
 
                 // Turn on Backlight for LCD, flickers due to power when only running on USB
                 lcd.backlight();
@@ -164,12 +164,15 @@ namespace CellularRemoteControl
 
                 gprs.SIM900_SetTime();
 
+                // Display signal quality on LCD
+                #if (LCD)
+                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("Signal Quality:");
+                #endif
                 // Excellent Signal
                 if ((seeedStudioGSM.SignalStrength >= 20) && (seeedStudioGSM.SignalStrength <= 31))
                 {
                     Debug.Print("Signal: Excellent");
                     #if (LCD)
-                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("Signal Quality:");
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("   Excellent");
                     #endif
                 }
@@ -178,7 +181,6 @@ namespace CellularRemoteControl
                 {
                     Debug.Print("Signal: Good");
                     #if (LCD)
-                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("Signal Quality:");
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("      Good");
                     #endif
                 }
@@ -187,7 +189,6 @@ namespace CellularRemoteControl
                 {
                     Debug.Print("Signal: Poor");
                     #if (LCD)
-                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("Signal Quality:");
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("      Poor");
                     #endif
                 }
@@ -196,7 +197,6 @@ namespace CellularRemoteControl
                 {
                     Debug.Print("No Signal");
                     #if (LCD)
-                        lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("Signal Quality:");
                         lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("      None");
                     #endif
                 }
