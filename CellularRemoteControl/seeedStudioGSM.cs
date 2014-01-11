@@ -28,7 +28,7 @@ namespace seeedStudio.GPRS
 
         private static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
 
-        public seeedStudioGSM(string portName = "COM1", int baudRate = 19200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
+        public seeedStudioGSM(string portName = "COM1", int baudRate = 115200, Parity parity = Parity.None, int dataBits = 8, StopBits stopBits = StopBits.One)
         {
             try
             {
@@ -347,6 +347,21 @@ namespace seeedStudio.GPRS
             catch (Exception ecx)
             {
                 Debug.Print("SIM900_GetTime : " + ecx.Message.ToString());
+            }
+        }
+        public void SIM900_SetBaudRate(int baudrate)
+        {
+            try
+            {
+                Debug.Print("Setting Baud rate to 115200");
+                PrintLine("AT+IPR="+baudrate, true);
+                Thread.Sleep(100);
+                PrintEnd();
+                Thread.Sleep(500);
+            }
+            catch (Exception ecx)
+            {
+                Debug.Print("SIM900_SignalQuality : " + ecx.Message.ToString());
             }
         }
         public static void SIM900_TogglePower()

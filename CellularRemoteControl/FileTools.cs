@@ -48,8 +48,6 @@ namespace CellularRemoteControl
             }
             catch (Exception ex)
             {
-/*                Program._led_Active.Write(true);
-                Program._led_NewMessage.Write(true);        */
                 Debug.Print(ex.Message);
                 return "";
             }

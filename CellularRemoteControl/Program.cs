@@ -23,7 +23,7 @@ using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.IO;
 #if (LCD)
-    using seeedStudio.SerialLCD;
+    using seeedStudio.Grove.SerialLCD;
 #endif
 #if (CELL)
     using seeedStudio.GPRS;
@@ -38,6 +38,10 @@ namespace CellularRemoteControl
     {
         public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields Shields. Toggling reboots all shields
 
+        #if (CELL)
+            public static int gsmbaudrate = 115200;
+            public static string gsmcomport = "COM1";
+        #endif
         #if (LCD)
             public static byte[] lcdMessageLine1;
             public static byte[] lcdMessageLine2;
@@ -103,7 +107,7 @@ namespace CellularRemoteControl
                 // Timer turns Backlight off after 30 seconds of inactivity
                 Timer backlightTimer = new Timer(BacklightTimerOff, lcd, 0, 30000);
 
-                Thread.Sleep(500);
+                Thread.Sleep(2000);
 
                 // Turn on Backlight for LCD, flickers due to power when only running on USB
                 lcd.backlight();
@@ -146,7 +150,7 @@ namespace CellularRemoteControl
         #if (CELL)
             static void Cellular_thread()
             {
-                seeedStudioGSM gprs = new seeedStudioGSM();
+                seeedStudioGSM gprs = new seeedStudioGSM(gsmcomport, gsmbaudrate);
 
                 seeedStudioGSM.SIM900_TogglePower(); // If this actually powers down the modem we catch the power down message and TogglePower again through the DataHandler
 
@@ -157,6 +161,7 @@ namespace CellularRemoteControl
 
                 Thread.Sleep(20000);
 
+                gprs.SIM900_SetBaudRate(gsmbaudrate);
                 gprs.SIM900_FirmwareVersion();
                 gprs.SIM900_SignalQuality();
 
@@ -236,12 +241,12 @@ namespace CellularRemoteControl
                             {
                                 if (command[1].Trim().ToUpper().Substring(1,1) == "+")
                                 {
-                                    if (Relay.On(Str2Int(command[1].Trim().ToUpper().Substring(0,1))))
+                                    if (Relay.On(int.Parse(command[1].Trim().ToUpper().Substring(0,1))))
                                     {
                                         ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
 
                                         #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            SWState[Str2Int(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
+                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
                                         #endif
                                     }
                                     else
@@ -252,11 +257,11 @@ namespace CellularRemoteControl
                                 }
                                 else if (command[1].Trim().ToUpper().Substring(1,1) == "-")
                                 {
-                                    if (Relay.Off(Str2Int(command[1].Trim().ToUpper().Substring(0, 1))))
+                                    if (Relay.Off(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
-                                        ReplySMS = "Switch " + Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
+                                        ReplySMS = "Switch " + int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
                                         #if (LCD)
-                                            SWState[Str2Int(command[1].Trim().ToUpper().Substring(0, 1)) - 1] = "Off ";
+                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 1] = "Off ";
                                         #endif
                                     }
                                     else
@@ -267,7 +272,7 @@ namespace CellularRemoteControl
                                 }
                                 else if (command[1].Trim().ToUpper().Substring(1, 1) == "?")
                                 {
-                                    if (Relay.State(Str2Int(command[1].Trim().ToUpper().Substring(0, 1))))
+                                    if (Relay.State(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
                                         ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is On";
                                     }
@@ -360,19 +365,19 @@ namespace CellularRemoteControl
                     if (request.URL.Length > 9)
                     {
                         string[] parameters = request.URL.Substring(request.URL.Length - 3, 3).Split('=');
-                        if (Str2Int(parameters[1]) == 1)
+                        if (int.Parse(parameters[1]) == 1)
                         {
-                            if (Relay.On(Str2Int(parameters[0])))
+                            if (Relay.On(int.Parse(parameters[0])))
                             {
-                                SWState[Str2Int(parameters[0]) - 1] = "On  ";
+                                SWState[int.Parse(parameters[0]) - 1] = "On  ";
                             }
 
                         }
-                        else if (Str2Int(parameters[1]) == 0)
+                        else if (int.Parse(parameters[1]) == 0)
                         {
-                            if (Relay.Off(Str2Int(parameters[0])))
+                            if (Relay.Off(int.Parse(parameters[0])))
                             {
-                                SWState[Str2Int(parameters[0]) - 1] = "Off ";
+                                SWState[int.Parse(parameters[0]) - 1] = "Off ";
                             }
                         }
                         #if (LCD)
@@ -429,19 +434,5 @@ namespace CellularRemoteControl
                     request.Send404();
             }
         #endif
-        // convert a string to an "int"  stops at the end-of-string, or at the first non-digit found
-        public static int Str2Int(string input, int offset = 0)
-        {
-            int ret = 0;   // built the result here
-            for (int i = offset; i < input.Length; i++)  // stop when all chars have been processed
-            {
-                char c = input[i];      // get the next char
-                if (c < '0') break;     // stop if a non-number is found
-                if (c > '9') break;
-                int n = (int)c - 48;    // convert the ascii value to a number, IE '1' = 49
-                ret = n + 10 * ret;     // accumulate the result
-            }
-            return ret;   // return the result to caller
-        }
     }
 }
