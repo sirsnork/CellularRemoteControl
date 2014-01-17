@@ -90,7 +90,7 @@ namespace seeedStudio.GPRS
                             Debug.Print("New Message received.");
                             string[] sCMTI = output.ToString().Split(',');
                             LastMessage = int.Parse(FileTools.strMID(sCMTI[1], 0, sCMTI[1].Length - 2));
-                            Thread.Sleep(1000);
+                            Thread.Sleep(100);
                         }
 
                         if (output.ToString().IndexOf("CONNECT OK") > -1)
@@ -153,7 +153,7 @@ namespace seeedStudio.GPRS
                 awatingResponseString = awaitResponseString;
                 while (!awatingResponseString.Equals(""))
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                 }
             }
             Print(line + "\r");
@@ -171,7 +171,6 @@ namespace seeedStudio.GPRS
             byte[] bytesToSend = new byte[1];
             bytesToSend[0] = 26;
             serialPort.Write(bytesToSend, 0, 1);
-            Thread.Sleep(200);
         }        
 
         public void postRequest(string apn, string gatewayip, string host, string page, string port, string parameters)
@@ -191,7 +190,7 @@ namespace seeedStudio.GPRS
 
             while (connected == false)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(200); //1000
             }
             connected = false;
             serialPort.Flush();
@@ -249,14 +248,10 @@ namespace seeedStudio.GPRS
         {
             Debug.Print("SMS PDU mode (0) o Text (1)");
             PrintLine("AT+CMGF=1", true);
-            Thread.Sleep(100);
             Debug.Print("SMS Storage SIM");
             PrintLine("AT+CPMS=\"SM\"", true);
-            Thread.Sleep(100);
             PrintLine("AT+CSDH=0", true);
-            Thread.Sleep(100);
             PrintEnd();
-            Thread.Sleep(500);
         }
         public void SendSMS(string msisdn, string message)
         {
@@ -264,11 +259,10 @@ namespace seeedStudio.GPRS
             {
                 PrintLine("AT+CMGF=1", true);
                 PrintLine("AT+CMGS=\"" + msisdn + "\"", false);
-                Thread.Sleep(100);
+                Thread.Sleep(100); // These need to be here since we won't get a response if we try and wait for one
                 PrintLine(message);
                 Thread.Sleep(100);
                 PrintEnd();
-                Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
@@ -281,9 +275,9 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("SMS Read");
                 PrintLine("AT+CMGR=" + indexSMS.ToString(), true);
-                Thread.Sleep(100);
+                //Thread.Sleep(100);
                 PrintEnd();
-                Thread.Sleep(500);
+                //Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
@@ -296,9 +290,9 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("SMS All delete");
                 PrintLine("AT+CMGD=0,4", true);
-                Thread.Sleep(100);
+                //Thread.Sleep(100);
                 PrintEnd();
-                Thread.Sleep(500);
+                //Thread.Sleep(500);
                 LastMessage = 0;
             }
             catch (Exception ecx)
@@ -314,9 +308,7 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Firmware Version");
                 PrintLine("AT+GSV", true);
-                Thread.Sleep(100);
                 PrintEnd();
-                Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
@@ -329,9 +321,7 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Signal Quality");
                 PrintLine("AT+CSQ", true);
-                Thread.Sleep(100);
                 PrintEnd();
-                Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
@@ -344,11 +334,8 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Get Network Time");
                 PrintLine("AT+CLTS=1", true);
-                Thread.Sleep(200);
                 PrintLine("AT+CCLK?", true);
-                Thread.Sleep(200);
                 PrintEnd();
-                Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
@@ -361,9 +348,7 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Setting Baud rate to " + baudrate);
                 PrintLine("AT+IPR="+baudrate, true);
-                Thread.Sleep(100);
                 PrintEnd();
-                Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
