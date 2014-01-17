@@ -82,7 +82,6 @@ namespace seeedStudio.GPRS
                         Debug.Print(output.ToString());
                         if (output.ToString().IndexOf("Call Ready") > -1)
                         {
-                            Debug.Print("Call Ready Recieved");
                             ModemReady = true;
                         }
 

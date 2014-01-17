@@ -37,6 +37,7 @@ namespace CellularRemoteControl
     public class Program
     {
         public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields Shields. Toggling reboots all shields
+        public static int NumSwitches = 4;
 
         #if (CELL)
             public static int gsmbaudrate = 115200;
@@ -356,6 +357,8 @@ namespace CellularRemoteControl
 
             private static void RequestReceived(Request request)
             {
+                string html = "";
+                int i = 0;
                 Debug.Print("Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + ". Method: " + request.Method + " URL: " + request.URL);
 
                 if (request.URL == "/" || request.URL == "/index.html") // Redirect to /switches
@@ -397,30 +400,22 @@ namespace CellularRemoteControl
                         #endif
                     }
 
-                    request.SendResponse(@"<html>
-                        <head>
-                        </head>
-                        <body>
-                        <p>
-                        <input type=""button"" value=""Switch 1 on""
-                        onclick=""window.location.href='/switches?1=1'""/>
-                        <input type=""button"" value=""Switch 1 off""
-                        onclick=""window.location.href='/switches?1=0'""/><br>
-                        <input type=""button"" value=""Switch 2 on""
-                        onclick=""window.location.href='/switches?2=1'""/>
-                        <input type=""button"" value=""Switch 2 off""
-                        onclick=""window.location.href='/switches?2=0'""/><br>
-                        <input type=""button"" value=""Switch 3 on""
-                        onclick=""window.location.href='/switches?3=1'""/>
-                        <input type=""button"" value=""Switch 3 off""
-                        onclick=""window.location.href='/switches?3=0'""/><br>
-                        <input type=""button"" value=""Switch 4 on""
-                        onclick=""window.location.href='/switches?4=1'""/>
-                        <input type=""button"" value=""Switch 4 off""
-                        onclick=""window.location.href='/switches?4=0'""/>
-                        </p>
-                        </body>
-                        </html>");
+                    html = "<head><h3><b>Cellular Remote Manual Mode</b></h3></head><body><p>";
+
+                    for (i = 0; i < NumSwitches; i++)
+                    {
+                        html = html + "<p>Switch " + ((i + 1) / 10 >> 0) + ((i + 1) % 10) + ": <button style=\"width:100;height:28;background-color:";
+                        if (SWState[i] == "On  ")
+                        {
+                            html = html + "lightgreen\" onclick=\"window.location.href='/switches?" + (i + 1) + "=0'\">Turn Off";
+                        }
+                        else
+                        {
+                            html = html + "lightgray\" onclick=\"window.location.href='/switches?" + (i + 1) + "=1'\">Turn On";
+                        }
+                        html = html + "</button></p></body></html>";
+                    }
+                    request.SendResponse(html);
                 }
                 else
                 {
