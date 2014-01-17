@@ -25,6 +25,7 @@ namespace seeedStudio.GPRS
 
         public static int LastMessage = 0;
         public static int SignalStrength = 0;
+        static public bool ModemReady = false;
 
         private static OutputPort _GPRS_Power_Active = new OutputPort(Pins.GPIO_PIN_D9, false); //soft power on pin for GPRS shield
 
@@ -79,6 +80,12 @@ namespace seeedStudio.GPRS
                     else
                     {
                         Debug.Print(output.ToString());
+                        if (output.ToString().IndexOf("Call Ready") > -1)
+                        {
+                            Debug.Print("Call Ready Recieved");
+                            ModemReady = true;
+                        }
+
                         if (output.ToString().IndexOf("+CMTI: \"SM\"") > -1)
                         {
                             Debug.Print("New Message received.");
@@ -353,7 +360,7 @@ namespace seeedStudio.GPRS
         {
             try
             {
-                Debug.Print("Setting Baud rate to 115200");
+                Debug.Print("Setting Baud rate to " + baudrate);
                 PrintLine("AT+IPR="+baudrate, true);
                 Thread.Sleep(100);
                 PrintEnd();

@@ -41,6 +41,7 @@ namespace CellularRemoteControl
         #if (CELL)
             public static int gsmbaudrate = 115200;
             public static string gsmcomport = "COM1";
+            public static bool InitTimeout = false;
         #endif
         #if (LCD)
             public static byte[] lcdMessageLine1;
@@ -105,7 +106,7 @@ namespace CellularRemoteControl
                 LCD lcd = new LCD("COM2");
 
                 // Timer turns Backlight off after 30 seconds of inactivity
-                Timer backlightTimer = new Timer(BacklightTimerOff, lcd, 0, 30000);
+                Timer backlightTimer = new Timer(BacklightTimerOff, lcd, 30000, 0);
 
                 Thread.Sleep(2000);
 
@@ -154,19 +155,22 @@ namespace CellularRemoteControl
 
                 seeedStudioGSM.SIM900_TogglePower(); // If this actually powers down the modem we catch the power down message and TogglePower again through the DataHandler
 
+                Timer ModemInitTimeout = new Timer(ModemInitTimer, gprs, 30000, 0);
+
                 #if (LCD)
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Initializing");
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Modem");
                 #endif
 
-                Thread.Sleep(20000);
+                while (InitTimeout == false && seeedStudioGSM.ModemReady == false)
+                {
+                    Thread.Sleep(100); // Wait for either the modem to report "Call Ready" or for 30 seconds to pass
+                }
 
-                gprs.SIM900_SetBaudRate(gsmbaudrate);
+                ModemInitTimeout.Dispose(); // Dispose of timer even if never fired.
+
                 gprs.SIM900_FirmwareVersion();
                 gprs.SIM900_SignalQuality();
-
-                Thread.Sleep(5000);
-
                 gprs.SIM900_SetTime();
 
                 // Display signal quality on LCD
@@ -312,6 +316,13 @@ namespace CellularRemoteControl
                 }
                 return false;
             }
+            static void ModemInitTimer(object state)
+            {
+                // If we don't detect "Call Ready" from the modem, set the baud rate to the correct setting
+                seeedStudioGSM gprs = (seeedStudioGSM)state;
+                gprs.SIM900_SetBaudRate(gsmbaudrate);
+                InitTimeout = true;
+            }
         #endif
 
         #if (WEB)
@@ -329,7 +340,7 @@ namespace CellularRemoteControl
 
             }
             #if (LCD)
-                private static void DisplayIP()
+                private static void DisplayIP() // Display IP address on LCD for 10 seconds.
                 {
                     var IPAddress = "";
                     IPAddress = Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress;
@@ -347,7 +358,7 @@ namespace CellularRemoteControl
             {
                 Debug.Print("Request from " + request.Client.ToString() + " received at " + DateTime.Now.ToString() + ". Method: " + request.Method + " URL: " + request.URL);
 
-                if (request.URL == "/" || request.URL == "/index.html")
+                if (request.URL == "/" || request.URL == "/index.html") // Redirect to /switches
                 {
                     request.SendResponse(@" <html xmlns=""http://www.w3.org/1999/xhtml"">    
                         <head>      
