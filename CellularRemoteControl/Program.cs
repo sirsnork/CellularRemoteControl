@@ -49,7 +49,7 @@ namespace CellularRemoteControl
             public static byte[] lcdMessageLine2;
         #endif
         #if (LCD || WEB)
-            public static string[] SWState = { "Off ", "Off ", "Off ", "Off " };
+            public static string[] SWState = { "Off ", "Off ", "Off ", "Off " }; // Maybe convert this to an array of an array so we can store Name, State (bool), LCDState etc for each switch
             public static int LCDSleep = 0;
         #endif
         #if (WEB)
@@ -89,7 +89,7 @@ namespace CellularRemoteControl
                         lcdThread.Resume();
                         LCDSleep = 0;
                     }
-                    Thread.Sleep(10);
+                    Thread.Sleep(50);
                 }
             #else
                 Thread.Sleep(Timeout.Infinite);
@@ -159,7 +159,7 @@ namespace CellularRemoteControl
                 Timer ModemInitTimeout = new Timer(ModemInitTimer, gprs, 30000, 0);
 
                 #if (LCD)
-                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Initializing");
+                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Powering up");
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Modem");
                 #endif
 
@@ -169,6 +169,11 @@ namespace CellularRemoteControl
                 }
 
                 ModemInitTimeout.Dispose(); // Dispose of timer even if never fired.
+
+                #if (LCD)
+                    lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Initializing");
+                    lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Modem");
+                #endif
 
                 gprs.SIM900_FirmwareVersion();
                 gprs.SIM900_SignalQuality();
@@ -347,7 +352,7 @@ namespace CellularRemoteControl
                     IPAddress = Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress;
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  IP Address:");
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes(IPAddress);
-                    LCDSleep = 10000;
+                    LCDSleep = 10000; // This will tell the LCD thread to sleep for 10 seconds so the IP address can be displayed
                 }
                 private static void button_OnInterrupt(uint port, uint data, DateTime time)
                 {

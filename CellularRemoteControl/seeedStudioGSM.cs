@@ -9,6 +9,8 @@ using CellularRemoteControl;
 
 // Driver for Seeedstudio GPRS Shield. Works for both V1 and V2 shields.
 // Configure Shield for software serial and install unlocked SIM card
+// Seeedstudio say they shiekd ships at 19200, but it doesn't. Until you force the baud rate you will never see a Call Ready message
+// We default to 115200 to keep time spent passing commmands back and forward to a minimum
 
 namespace seeedStudio.GPRS
 {
@@ -248,10 +250,14 @@ namespace seeedStudio.GPRS
         {
             Debug.Print("SMS PDU mode (0) o Text (1)");
             PrintLine("AT+CMGF=1", true);
+            Thread.Sleep(100);
             Debug.Print("SMS Storage SIM");
             PrintLine("AT+CPMS=\"SM\"", true);
+            Thread.Sleep(100);
             PrintLine("AT+CSDH=0", true);
+            Thread.Sleep(100);
             PrintEnd();
+            Thread.Sleep(100);
         }
         public void SendSMS(string msisdn, string message)
         {
@@ -275,9 +281,9 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("SMS Read");
                 PrintLine("AT+CMGR=" + indexSMS.ToString(), true);
-                //Thread.Sleep(100);
+                Thread.Sleep(100);
                 PrintEnd();
-                //Thread.Sleep(500);
+                Thread.Sleep(500);
             }
             catch (Exception ecx)
             {
@@ -290,9 +296,9 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("SMS All delete");
                 PrintLine("AT+CMGD=0,4", true);
-                //Thread.Sleep(100);
+                Thread.Sleep(100);
                 PrintEnd();
-                //Thread.Sleep(500);
+                Thread.Sleep(500);
                 LastMessage = 0;
             }
             catch (Exception ecx)
@@ -308,7 +314,9 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Firmware Version");
                 PrintLine("AT+GSV", true);
+                Thread.Sleep(100);
                 PrintEnd();
+                Thread.Sleep(100);
             }
             catch (Exception ecx)
             {
@@ -322,6 +330,7 @@ namespace seeedStudio.GPRS
                 Debug.Print("Signal Quality");
                 PrintLine("AT+CSQ", true);
                 PrintEnd();
+                Thread.Sleep(100);
             }
             catch (Exception ecx)
             {
@@ -334,8 +343,11 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Get Network Time");
                 PrintLine("AT+CLTS=1", true);
+                Thread.Sleep(100);
                 PrintLine("AT+CCLK?", true);
+                Thread.Sleep(100);
                 PrintEnd();
+                Thread.Sleep(100);
             }
             catch (Exception ecx)
             {
@@ -348,7 +360,9 @@ namespace seeedStudio.GPRS
             {
                 Debug.Print("Setting Baud rate to " + baudrate);
                 PrintLine("AT+IPR="+baudrate, true);
+                Thread.Sleep(100);
                 PrintEnd();
+                Thread.Sleep(100);
             }
             catch (Exception ecx)
             {
