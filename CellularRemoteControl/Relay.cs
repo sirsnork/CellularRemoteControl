@@ -9,10 +9,10 @@ namespace CellularRemoteControl
     {
         // Supports Seeedstudio Relay Shield V2
         // http://www.seeedstudio.com/depot/relay-shield-v20-p-1376.html
-        private static OutputPort relay1 = new OutputPort(Pins.GPIO_PIN_D4, false);
-        private static OutputPort relay2 = new OutputPort(Pins.GPIO_PIN_D5, false);
-        private static OutputPort relay3 = new OutputPort(Pins.GPIO_PIN_D6, false);
-        private static OutputPort relay4 = new OutputPort(Pins.GPIO_PIN_D7, false);
+        private static OutputPort relay1 = new OutputPort(Pins.GPIO_PIN_D7, false);
+        private static OutputPort relay2 = new OutputPort(Pins.GPIO_PIN_D6, false);
+        private static OutputPort relay3 = new OutputPort(Pins.GPIO_PIN_D5, false);
+        private static OutputPort relay4 = new OutputPort(Pins.GPIO_PIN_D4, false);
 
         public Relay()
         {
