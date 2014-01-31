@@ -1,4 +1,18 @@
-﻿//TO-DO: Setup blink function for each output, add relay thread for this?
+﻿//TO-DO:    Setup blink function for each output, add relay thread for this?
+//          Handle multiple commands in a single message
+//          Add commands for all on/off
+//          Handle network disconnection and reconnection cleanly (restart web thread?). Something like this
+/*
+            using Microsoft.SPOT.Net.NetworkInformation;
+
+            static bool isNetworkAvailable = false;
+
+            static void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)         
+            {
+                         isNetworkAvailable = e.IsAvailable;
+                         Debug.Print(DateTime.UtcNow.ToString("u") + ": " + (isNetworkAvailable ? "CONNECTED" : "DISCONNECTED"));
+            }
+*/
 
 #region // Preprocessor code
 

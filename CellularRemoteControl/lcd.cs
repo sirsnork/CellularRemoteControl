@@ -98,7 +98,9 @@ namespace seeedStudio.Grove.SerialLCD
         public void cursor() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
+            Thread.Sleep(10);
             _lcd.Write(SLCD_CURSOR_ON, 0, 1);
+            Thread.Sleep(10);
         }
 
         // Switch off the blinking cursor
