@@ -30,15 +30,17 @@ Root
 ```  
 Current commands are:
 
-* 1+    : Turns on D4 Pin
-* 1-    : Turns off D4 Pin
+* 1+    : Turns on D7 Pin
+* 1-    : Turns off D7 Pin
 * 1?    : Returns current state of D4 Pin
-* 2+    : Turns on D5 Pin
-* 2-    : Turns off D5 Pin
+* 2+    : Turns on D6 Pin
+* 2-    : Turns off D6 Pin
 * 2?    : Returns current state of D5 Pin
-* 3+    : Turns on D6 Pin
-* 3-    : Turns off D6 Pin
+* 3+    : Turns on D5 Pin
+* 3-    : Turns off D5 Pin
 * 3?    : Returns current state of D6 Pin
-* 4+    : Turns on D7 Pin
-* 4-    : Turns off D7 Pin
+* 4+    : Turns on D4 Pin
+* 4-    : Turns off D4 Pin
 * 4?    : Returns current state of D7 Pin
+* All+  : Turns on ALL Pins
+* All-  : Turns off ALL Pins
