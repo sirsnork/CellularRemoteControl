@@ -263,9 +263,21 @@ namespace CellularRemoteControl
 
                             if (CheckNumberWhitelist(command[0], CellWhitelist)) // Make sure incoming message was sent from allowed number
                             {
-                                if (command[1].Trim().ToUpper().Substring(1,1) == "+")
+                                if (command[1].Trim().ToUpper().Substring(command[1].Trim().Length - 1,1) == "+")
                                 {
-                                    if (Relay.On(int.Parse(command[1].Trim().ToUpper().Substring(0,1))))
+                                    if (command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1) == "ALL")
+                                    {
+                                        for (int i = 0; i < NumSwitches; i++)
+                                        {
+                                            Relay.On(i + 1);
+                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                SWState[i] = "On  ";
+                                            #endif
+                                        }
+
+                                        ReplySMS = "All switches turned On.";
+                                    }
+                                    else if (Relay.On(int.Parse(command[1].Trim().ToUpper().Substring(0,1))))
                                     {
                                         ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
 
@@ -279,9 +291,21 @@ namespace CellularRemoteControl
                                     }
 
                                 }
-                                else if (command[1].Trim().ToUpper().Substring(1,1) == "-")
+                                else if (command[1].Trim().ToUpper().Substring(command[1].Trim().Length - 1, 1) == "-")
                                 {
-                                    if (Relay.Off(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
+                                    if (command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1) == "ALL")
+                                    {
+                                        for (int i = 0; i < NumSwitches; i++)
+                                        {
+                                            Relay.Off(i + 1);
+                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                SWState[i] = "Off ";
+                                            #endif
+                                        }
+
+                                        ReplySMS = "All switches turned Off.";
+                                    }
+                                    else if (Relay.Off(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
                                         ReplySMS = "Switch " + int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
                                         #if (LCD)
