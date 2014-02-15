@@ -45,17 +45,19 @@ namespace seeedStudio.Grove.SerialLCD
             Thread.Sleep(2);
             _lcd.Write(SLCD_CONTROL_HEADER,0 ,1);
             _lcd.Write(SLCD_POWER_OFF, 0, 1);
-            Thread.Sleep(1);
+            Thread.Sleep(2);
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_POWER_ON, 0, 1);
-            Thread.Sleep(1);
+            Thread.Sleep(2);
             _lcd.Write(SLCD_INIT_ACK, 0, 1);
         }
 
         public void Clear()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0 , 1);
+            Thread.Sleep(5);
             _lcd.Write(SLCD_CLEAR_DISPLAY, 0, 1);
+            Thread.Sleep(5);
         }
         // Return to home(top-left corner of LCD)
         public void Home()
@@ -67,7 +69,9 @@ namespace seeedStudio.Grove.SerialLCD
         public void SetCursor(byte column, byte row)
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
+            Thread.Sleep(5);
             _lcd.Write(SLCD_CURSOR_HEADER, 0 , 1); //cursor header command
+            Thread.Sleep(5);
             byte[] coords = new byte[] { column, row };
             _lcd.Write(coords, 0, 1);
             _lcd.Write(coords, 1, 1);
@@ -185,7 +189,9 @@ namespace seeedStudio.Grove.SerialLCD
         {
             _lcd.DiscardInBuffer();
             _lcd.Write(SLCD_CHAR_HEADER, 0, 1);
+            Thread.Sleep(5);
             _lcd.Write(b, 0, b.Length);
+            Thread.Sleep(5);
         }
     }
 }

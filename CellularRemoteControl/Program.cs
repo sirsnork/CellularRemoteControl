@@ -1,16 +1,25 @@
 ﻿//TO-DO:    Setup blink function for each output, add relay thread for this?
 //          Handle multiple commands in a single message
-//          Add commands for all on/off
 //          Handle network disconnection and reconnection cleanly (restart web thread?). Something like this
 /*
             using Microsoft.SPOT.Net.NetworkInformation;
 
+            NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged; 
+ 
             static bool isNetworkAvailable = false;
 
-            static void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)         
+            static void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
             {
-                         isNetworkAvailable = e.IsAvailable;
-                         Debug.Print(DateTime.UtcNow.ToString("u") + ": " + (isNetworkAvailable ? "CONNECTED" : "DISCONNECTED"));
+                isNetworkAvailable = e.IsAvailable;
+                if (isNetworkAvailable == true)
+                {
+                    WebThread.Start();
+                }
+                else
+                {
+                    _NetworkDisconnected = false;
+                }
+                Debug.Print(DateTime.UtcNow.ToString("u") + ": " + (isNetworkAvailable ? "CONNECTED" : "DISCONNECTED"));
             }
 */
 
@@ -21,7 +30,7 @@
 #define WEB // set to #undef WEB to disable web server
 
 #if (!CELL && !WEB)
-    #error No network transprt defined
+#error No network transport defined
 #endif
 
 #endregion
@@ -36,6 +45,7 @@ using SecretLabs.NETMF.Hardware;
 using SecretLabs.NETMF.Hardware.NetduinoPlus;
 using System.Text;
 using System.IO;
+
 #if (LCD)
     using seeedStudio.Grove.SerialLCD;
 #endif
@@ -50,7 +60,7 @@ namespace CellularRemoteControl
 {
     public class Program
     {
-        public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields Shields. Toggling reboots all shields
+        public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields. Toggling reboots all shields
         public static int NumSwitches = 4;
 
         #if (CELL)
@@ -61,14 +71,16 @@ namespace CellularRemoteControl
         #if (LCD)
             public static byte[] lcdMessageLine1;
             public static byte[] lcdMessageLine2;
+            public static int LCDSleep = 0;
         #endif
         #if (LCD || WEB)
             public static string[] SWState = { "Off ", "Off ", "Off ", "Off " }; // Maybe convert this to an array of an array so we can store Name, State (bool), LCDState etc for each switch
-            public static int LCDSleep = 0;
         #endif
         #if (WEB)
             const string WebFolder = "\\SD\\Web";
         #endif
+
+
 
         public static void Main()
         {
@@ -76,7 +88,7 @@ namespace CellularRemoteControl
             Thread.Sleep(200); // Don't bounce power to the shields too fast
             _shieldPower.Write(true);
             Thread.Sleep(700); // Let the shields come up before trying to access them
-
+            
             #if (LCD)
                 var lcdThread = new Thread(LCD_thread);
                 lcdThread.Start();
@@ -87,7 +99,7 @@ namespace CellularRemoteControl
                 cellularThread.Start();
             #endif
 
-           #if (WEB)
+            #if (WEB)
                 var WebThread = new Thread(Web_thread);
                 WebThread.Start();
             #endif
@@ -170,7 +182,7 @@ namespace CellularRemoteControl
 
                 seeedStudioGSM.SIM900_TogglePower(); // If this actually powers down the modem we catch the power down message and TogglePower again through the DataHandler
 
-                Timer ModemInitTimeout = new Timer(ModemInitTimer, gprs, 30000, 0);
+                Timer ModemInitTimeout = new Timer(ModemInitTimer, gprs, 30000, 0); // Timeout for modem to return "Call Ready". If it doesn't we assume the modem is set to the wrong baud rate and send baud rate command
 
                 #if (LCD)
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Powering up");
@@ -381,8 +393,8 @@ namespace CellularRemoteControl
                 Listener webServer = new Listener(RequestReceived);
 
                 Thread.Sleep(Timeout.Infinite);
-
             }
+
             #if (LCD)
                 private static void DisplayIP() // Display IP address on LCD for 10 seconds.
                 {
