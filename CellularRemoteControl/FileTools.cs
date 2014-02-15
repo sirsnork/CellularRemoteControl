@@ -43,7 +43,7 @@ namespace CellularRemoteControl
                 FileContent = reader.ReadToEnd();
                 reader.Close();
                 StringBuilder RemoveCRLF = new StringBuilder(FileContent);
-                FileContent = RemoveCRLF.Replace("\r\n", "").ToString();
+                FileContent = RemoveCRLF.Replace("\r\n", ";").ToString();
                 return FileContent;
             }
             catch (Exception ex)

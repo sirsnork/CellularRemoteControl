@@ -372,6 +372,7 @@ namespace seeedStudio.GPRS
         public static void SIM900_TogglePower()
         {
             // Automatically power up the SIM900.
+            Thread.Sleep(1000);
             Debug.Print("Toggling Modem Power");
             _GPRS_Power_Active.Write(true);
             Thread.Sleep(2000);

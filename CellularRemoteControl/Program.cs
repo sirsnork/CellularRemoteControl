@@ -23,6 +23,8 @@
             }
 */
 
+//          Add password protected whitelist addition. First phone sends password and becomes master, additional phones can send password SMS message and be added to whitelist
+
 #region // Preprocessor code
 
 #define LCD // set to #undef LCD if no screen is attached to COM2
@@ -138,30 +140,30 @@ namespace CellularRemoteControl
                 Thread.Sleep(2000);
 
                 // Turn on Backlight for LCD, flickers due to power when only running on USB
-                lcd.backlight();
-                lcd.Clear();
+                lcd.backlightOn();
+                lcd.clear();
 
                 while (true)
                 {
                     // Check if LCD data needs to be updated
                     if (System.Convert.ToBase64String(lcdMessageLine1) != System.Convert.ToBase64String(oldlcdMessageLine1) || System.Convert.ToBase64String(lcdMessageLine2) != System.Convert.ToBase64String(oldlcdMessageLine2))
                     {
-                        lcd.backlight();
+                        lcd.backlightOn();
                         backlightTimer.Change(30000, 0); // Reset backlight timer to 30 seconds after screen change
                         if ((lcdMessageLine1 != oldlcdMessageLine1) && (lcdMessageLine2 != oldlcdMessageLine2))
                         {
-                            lcd.Clear();
+                            lcd.clear();
                         }
                         if (lcdMessageLine1 != oldlcdMessageLine1)
                         {
                             oldlcdMessageLine1 = lcdMessageLine1;
-                            lcd.SetCursor(0, 0);
+                            lcd.setCursor(0, 0);
                             lcd.print(lcdMessageLine1);
                         }
                         if (lcdMessageLine2 != oldlcdMessageLine2)
                         {
                             oldlcdMessageLine2 = lcdMessageLine2;
-                            lcd.SetCursor(0, 1);
+                            lcd.setCursor(0, 1);
                             lcd.print(lcdMessageLine2);
                         }
                     }
@@ -171,7 +173,7 @@ namespace CellularRemoteControl
             static void BacklightTimerOff(object state)
             {
                 LCD lcd = (LCD)state;
-                lcd.noBacklight();
+                lcd.backlightOff();
             }
         #endif
 
@@ -255,10 +257,10 @@ namespace CellularRemoteControl
                 // File containing Cellphone number to send initialization SMS too
                 string NumCellDefault = FileTools.ReadString("settings\\NumCellDefault.txt");
                 // File containing cellphone numbers to accept commands from, all others are ignored, splitting on + sign since we get a single string back from the file read
-                string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split('+');
+                string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split(';');
 
                 // Send SMS to default number saying we are up!
-                //gprs.SendSMS(NumCellDefault, "Remote switch controller operational");
+                //gprs.SendSMS(NumCellDefault, "Remote switch controller operational at " + DateTime.Now.ToString());
 
                 while (true)
                 {
@@ -282,16 +284,16 @@ namespace CellularRemoteControl
                                         for (int i = 0; i < NumSwitches; i++)
                                         {
                                             Relay.On(i + 1);
-                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
                                                 SWState[i] = "On  ";
                                             #endif
                                         }
 
-                                        ReplySMS = "All switches turned On.";
+                                        ReplySMS = DateTime.Now.ToString() + ": All switches turned On.";
                                     }
                                     else if (Relay.On(int.Parse(command[1].Trim().ToUpper().Substring(0,1))))
                                     {
-                                        ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
+                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
 
                                         #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                             SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
@@ -299,7 +301,7 @@ namespace CellularRemoteControl
                                     }
                                     else
                                     {
-                                        ReplySMS = "Error turning On Switch " + command[1].Trim().ToUpper().Substring(0,1) ;
+                                        ReplySMS = DateTime.Now.ToString() + ": Error turning On Switch " + command[1].Trim().ToUpper().Substring(0, 1);
                                     }
 
                                 }
@@ -315,18 +317,18 @@ namespace CellularRemoteControl
                                             #endif
                                         }
 
-                                        ReplySMS = "All switches turned Off.";
+                                        ReplySMS = DateTime.Now.ToString() + ": All switches turned Off.";
                                     }
                                     else if (Relay.Off(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
-                                        ReplySMS = "Switch " + int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
+                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
                                         #if (LCD)
                                             SWState[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 1] = "Off ";
                                         #endif
                                     }
                                     else
                                     {
-                                        ReplySMS = "Error turning Off Switch " + command[1].Trim().ToUpper().Substring(0, 1);
+                                        ReplySMS = DateTime.Now.ToString() + ": Error turning Off Switch " + command[1].Trim().ToUpper().Substring(0, 1);
                                     }
 
                                 }
@@ -334,18 +336,18 @@ namespace CellularRemoteControl
                                 {
                                     if (Relay.State(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
                                     {
-                                        ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is On";
+                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is On";
                                     }
                                     else
                                     {
-                                        ReplySMS = "Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is Off";
+                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + command[1].Trim().ToUpper().Substring(0, 1) + " is Off";
                                     }
                                 }
                                 else
                                 {
                                     ReplySMS = "";
-                                    Debug.Print("Unknown Command: " + command[1] + " from " + command[0]);
-                                    gprs.SendSMS(command[0], "Unknown command from " + command[0] + ": " + command[1]);
+                                    Debug.Print(DateTime.Now.ToString() + ": Unknown Command: " + command[1] + " from " + command[0]);
+                                    gprs.SendSMS(command[0], DateTime.Now.ToString() + ": Unknown command from " + command[0] + ": " + command[1]);
                                 }
                                 if (ReplySMS.Length > 0)
                                     gprs.SendSMS(command[0], ReplySMS);
@@ -363,9 +365,11 @@ namespace CellularRemoteControl
             }
             public static Boolean CheckNumberWhitelist(string CellNumber, string[] CellWhiteList)
             {
-                for (int j = 1; j < CellWhiteList.Length; j++) // start at 1 as the first entry in CellWhiteList will be blank as we split on '+' and '+' was the first character
+                Debug.Print("Incoming Number: " + CellNumber);
+                for (int j = 0; j < CellWhiteList.Length; j++) // start at 1 as the first entry in CellWhiteList will be blank as we split on '+' and '+' was the first character
                 {
-                    if (CellNumber == '+' + CellWhiteList[j])
+                    Debug.Print("Whitelist Number: " + CellWhiteList[j]);
+                    if (CellNumber == CellWhiteList[j])
                     {
                         return true;
                     }

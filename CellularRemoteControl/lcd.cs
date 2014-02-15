@@ -52,7 +52,7 @@ namespace seeedStudio.Grove.SerialLCD
             _lcd.Write(SLCD_INIT_ACK, 0, 1);
         }
 
-        public void Clear()
+        public void clear()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0 , 1);
             Thread.Sleep(5);
@@ -60,13 +60,13 @@ namespace seeedStudio.Grove.SerialLCD
             Thread.Sleep(5);
         }
         // Return to home(top-left corner of LCD)
-        public void Home()
+        public void home()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0 , 1);
             _lcd.Write(SLCD_RETURN_HOME, 0, 1);
         }
         // Set Cursor to (Column,Row) Position
-        public void SetCursor(byte column, byte row)
+        public void setCursor(byte column, byte row)
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             Thread.Sleep(5);
@@ -78,28 +78,28 @@ namespace seeedStudio.Grove.SerialLCD
         }
 
         // Switch the display off without clearing RAM
-        public void noDisplay() 
+        public void displayOff() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_DISPLAY_OFF, 0, 1);
         }      
 
         // Switch the display on
-        public void display()
+        public void displayOn()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_DISPLAY_ON, 0, 1);
         }
 
         // Switch the underline cursor off
-        public void noCursor() 
+        public void cursorOff() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_CURSOR_OFF, 0, 1);
         }
 
         // Switch the underline cursor on
-        public void cursor() 
+        public void cursorOn() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             Thread.Sleep(10);
@@ -108,14 +108,14 @@ namespace seeedStudio.Grove.SerialLCD
         }
 
         // Switch off the blinking cursor
-        public void noBlink() 
+        public void blinkOff() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_BLINK_OFF, 0, 1);
         }
 
         // Switch on the blinking cursor
-        public void blink() 
+        public void blinkOn() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_BLINK_ON, 0, 1);
@@ -150,36 +150,36 @@ namespace seeedStudio.Grove.SerialLCD
         }
 
         // This will 'right justify' text from the cursor
-        public void autoscroll() 
+        public void autoscrollOn() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_AUTO_SCROLL, 0, 1);
         }
 
         // This will 'left justify' text from the cursor
-        public void noAutoscroll() 
+        public void autoscrollOff() 
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_NO_AUTO_SCROLL, 0, 1);
         }
-        public void Power()
+        public void powerOn()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_POWER_ON, 0, 1);
         }
-        public void noPower()
+        public void powerOff()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_POWER_OFF, 0, 1);
         }
         //Turn off the backlight
-        public void noBacklight()
+        public void backlightOff()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_BACKLIGHT_OFF, 0, 1);
         }
         //Turn on the back light
-        public void backlight()
+        public void backlightOn()
         {
             _lcd.Write(SLCD_CONTROL_HEADER, 0, 1);
             _lcd.Write(SLCD_BACKLIGHT_ON, 0, 1);
