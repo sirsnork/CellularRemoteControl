@@ -27,9 +27,9 @@
 
 #region // Preprocessor code
 
-#define LCD // set to #undef LCD if no screen is attached to COM2
+#undef LCD // set to #undef LCD if no screen is attached to COM2
 #define CELL // Set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
-#define WEB // set to #undef WEB to disable web server
+#undef WEB // set to #undef WEB to disable web server
 
 #if (!CELL && !WEB)
 #error No network transport defined

@@ -58,7 +58,7 @@ namespace seeedStudio.GPRS
             }
             return inputBytes;
         }
-        static void serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        void serialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             // Check if Chars are received
             if (e.EventType == SerialData.Chars)
@@ -359,7 +359,7 @@ namespace seeedStudio.GPRS
             try
             {
                 Debug.Print("Setting Baud rate to " + baudrate);
-                PrintLine("AT+IPR="+baudrate, true);
+                PrintLine("AT+IPR=" + baudrate, true);
                 Thread.Sleep(100);
                 PrintEnd();
                 Thread.Sleep(100);
@@ -436,25 +436,38 @@ namespace seeedStudio.GPRS
         }
 
         // set the system's date and time from a string in this format:  "+CCLK: yy/MM/dd,hh:mm:ss+zz" maybe, not sure if the +CCLK will be here
-        private static void SetDateTime(string dts)
+        private void SetDateTime(string dts)
         {
-            var year = 2000 + Str2Int(dts, 19);      // convert each of the numbers
-            var month = Str2Int(dts, 22);
-            var day = Str2Int(dts, 25);
-            var hour = Str2Int(dts, 30);
-            var minute = Str2Int(dts, 33);
-            var second = Str2Int(dts, 36);
+            int year = Str2Int(dts, 19);      // convert each of the numbers
+            int longyear = 2000 + year;
+            int month = Str2Int(dts, 22);
+            int day = Str2Int(dts, 25);
+            int hour = Str2Int(dts, 30);
+            int minute = Str2Int(dts, 33);
+            int second = Str2Int(dts, 36);
+            int tzdata = Str2Int(dts, 39);
             if (hour == 0 && minute == 0 && second == 0)
             {
-                year = 2000 + Str2Int(dts, 8);      // the modem seems to prefix the actual AT command sometimes and not other times
+                year = Str2Int(dts, 8);      // the modem seems to prefix the actual AT command sometimes and not other times
+                longyear = 2000 + year;
                 month = Str2Int(dts, 11);
                 day = Str2Int(dts, 14);
                 hour = Str2Int(dts, 19);
                 minute = Str2Int(dts, 22);
                 second = Str2Int(dts, 25);
+                tzdata = Str2Int(dts, 28);
             }
-            System.DateTime dt = new System.DateTime(year, month, day, hour, minute, second);
-            Microsoft.SPOT.Hardware.Utility.SetLocalTime(dt);
+            System.DateTime dt = new System.DateTime(longyear, month, day, hour, minute, second);
+            Microsoft.SPOT.Hardware.Utility.SetLocalTime(dt); // Set clock on local hardware
+
+            if (tzdata < 49) // DST time in New Zealand is GMT+13 (52) and the firmware can't handle that so don't try and se the RTC unless it's GMT+12 (48) or less
+            {
+                string fulldatetime = "\"" + year.ToString("D2") + "/" + month.ToString("D2") + "/" + day.ToString("D2") + "," + hour.ToString("D2") + ":" + minute.ToString("D2") + ":" + second.ToString("D2") + "+42\""; // + tzdata.ToString("D2") + "\"";
+                PrintLine("AT+CCLK=" + fulldatetime, true);
+                Thread.Sleep(100);
+                PrintEnd();
+                Thread.Sleep(100);
+            }
         }
 
         // convert a string to an "int"  stops at the end-of-string, or at the first non-digit found
