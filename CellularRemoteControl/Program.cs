@@ -296,7 +296,9 @@ namespace CellularRemoteControl
                                 {
                                     requestedSwitch = int.Parse(command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1));
                                 }
+
                                 requestedAction = command[1].Trim().ToUpper().Substring(command[1].Trim().Length - 1,1);
+
                                 if (requestedAction == "+")
                                 {
                                     if (requestedSwitch == 0) // 0 = ALL
