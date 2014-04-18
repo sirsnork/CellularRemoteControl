@@ -45,6 +45,10 @@
     <Compile Include="WebServer\Extension.cs" />
     <Compile Include="WebServer\Listener.cs" />
     <Compile Include="WebServer\Request.cs" />
+    <Compile Include="XBee\ApiFrame.cs" />
+    <Compile Include="XBee\ApiFrameBuilder.cs" />
+    <Compile Include="XBee\Enumerations.cs" />
+    <Compile Include="XBee\XBee.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SPOT.Hardware" />
@@ -57,4 +61,5 @@
     <Reference Include="System" />
     <Reference Include="System.IO" />
   </ItemGroup>
+  <ItemGroup />
 </Project>

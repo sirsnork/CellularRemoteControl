@@ -11,6 +11,8 @@ using CellularRemoteControl;
    Configure Shield for software serial and install unlocked SIM card
    Seeedstudio say they shield ships at 19200, but it doesn't. Until you force the baud rate you will never see a Call Ready message
    We default to 115200 to keep time spent passing commmands back and forward to a minimum
+ 
+   The SIM900's RTC can't be set to anything more than GMT+12 even though New Zealands DST is GMT+13, at least not with firmware 1137B12SIM900M64_ST, the latest at time of writing
 */
 namespace seeedStudio.GPRS
 {
@@ -460,17 +462,19 @@ namespace seeedStudio.GPRS
             System.DateTime dt = new System.DateTime(longyear, month, day, hour, minute, second);
             Microsoft.SPOT.Hardware.Utility.SetLocalTime(dt); // Set clock on local hardware
 
-            if (tzdata < 49) // DST time in New Zealand is GMT+13 (52) and the firmware can't handle that so don't try and se the RTC unless it's GMT+12 (48) or less
+// Doesn't work, should but the AT command never returns            
+/*            if (tzdata < 49) // DST time in New Zealand is GMT+13 (52) and the firmware can't handle that so don't try and set the RTC unless it's GMT+12 (48) or less
             {
-                string fulldatetime = "\"" + year.ToString("D2") + "/" + month.ToString("D2") + "/" + day.ToString("D2") + "," + hour.ToString("D2") + ":" + minute.ToString("D2") + ":" + second.ToString("D2") + "+42\""; // + tzdata.ToString("D2") + "\"";
+                // The following line requires NETMF 4.3, without this you can run this whole thing with 4.2
+                string fulldatetime = year.ToString("D2") + "/" + month.ToString("D2") + "/" + day.ToString("D2") + "," + hour.ToString("D2") + ":" + minute.ToString("D2") + ":" + second.ToString("D2") + "+" + tzdata.ToString("D2");
                 PrintLine("AT+CCLK=" + fulldatetime, true);
                 Thread.Sleep(100);
                 PrintEnd();
                 Thread.Sleep(100);
-            }
+            } */
         }
 
-        // convert a string to an "int"  stops at the end-of-string, or at the first non-digit found
+        // convert a string to an "int" stops at the end-of-string, or at the first non-digit found
         private static int Str2Int(string input, int offset)
         {
             int ret = 0;   // built the result here

@@ -30,6 +30,7 @@
 #undef LCD // set to #undef LCD if no screen is attached to COM2
 #define CELL // Set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
 #undef WEB // set to #undef WEB to disable web server
+#define XBEE
 
 #if (!CELL && !WEB)
 #error No network transport defined
@@ -76,11 +77,16 @@ namespace CellularRemoteControl
             public static int LCDSleep = 0;
         #endif
         #if (LCD || WEB)
-            public static string[] SWState = { "Off ", "Off ", "Off ", "Off " }; // Maybe convert this to an array of an array so we can store Name, State (bool), LCDState etc for each switch
+            public static string[] SWState = { "Off ", "Off ", "Off ", "Off ", "Off", "Off" }; // Maybe convert this to an array of an array so we can store Name, State (bool), LCDState etc for each switch
         #endif
         #if (WEB)
             const string WebFolder = "\\SD\\Web";
         #endif
+#if XBEE
+        public static ulong[] XbeeAddress = { 0x0013A20040A78109, 0x0013A20040A780F7 };
+        public static string xbeecomport = "COM2";
+        public static int NumXbeeSwitches = 2;
+#endif
 
 
 
@@ -186,6 +192,8 @@ namespace CellularRemoteControl
 
                 Timer ModemInitTimeout = new Timer(ModemInitTimer, gprs, 30000, 0); // Timeout for modem to return "Call Ready". If it doesn't we assume the modem is set to the wrong baud rate and send baud rate command
 
+                XBee xbee = new XBee(xbeecomport);
+
                 #if (LCD)
                     lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Powering up");
                     lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Modem");
@@ -289,11 +297,32 @@ namespace CellularRemoteControl
                                             #endif
                                         }
 
+                                        for (int i = 0; i < NumXbeeSwitches; i++)
+                                        {
+                                            xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio1Configuration, true);
+                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                SWState[i + 4] = "On  ";
+                                            #endif
+                                        }
+
                                         ReplySMS = DateTime.Now.ToString() + ": All switches turned On.";
                                     }
-                                    else if (Relay.On(int.Parse(command[1].Trim().ToUpper().Substring(0,1))))
+                                    else if (int.Parse(command[1].Trim().ToUpper().Substring(0,1)) <= 4) // Turn on numbered switch
                                     {
+                                        Relay.On(int.Parse(command[1].Trim().ToUpper().Substring(0, 1)));
                                         ReplySMS = DateTime.Now.ToString() + ": Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
+
+                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
+                                        #endif
+                                    }
+                                    else if (int.Parse(command[1].Trim().ToUpper().Substring(0,1)) > 4) // Turn on Xbee numbered switch
+                                    {
+                                        xbee.SetDigitalOutput(XbeeAddress[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 5], XBeeCommand.ADio1Configuration, true);
+
+                                        Debug.Print("Xbee: " + XbeeAddress[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 5]);
+
+                                        ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned On";
 
                                         #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                             SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
@@ -317,13 +346,35 @@ namespace CellularRemoteControl
                                             #endif
                                         }
 
+                                        for (int i = 0; i < NumXbeeSwitches; i++)
+                                        {
+                                            xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio1Configuration, false);
+                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                SWState[i + 4] = "Off ";
+                                            #endif
+                                        }
+
                                         ReplySMS = DateTime.Now.ToString() + ": All switches turned Off.";
                                     }
-                                    else if (Relay.Off(int.Parse(command[1].Trim().ToUpper().Substring(0, 1))))
+                                    else if (int.Parse(command[1].Trim().ToUpper().Substring(0,1)) <= 4) // Turn off numbered switch
                                     {
-                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) + " was turned Off.";
-                                        #if (LCD)
-                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 1] = "Off ";
+                                        Relay.Off(int.Parse(command[1].Trim().ToUpper().Substring(0, 1)));
+                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned Off";
+
+                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "Off ";
+                                        #endif
+                                    }
+                                    else if (int.Parse(command[1].Trim().ToUpper().Substring(0,1)) > 4) // Turn off Xbee numbered switch
+                                    {
+                                        xbee.SetDigitalOutput(XbeeAddress[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 5], XBeeCommand.ADio1Configuration, false);
+
+                                        Debug.Print("Xbee: " + XbeeAddress[int.Parse(command[1].Trim().ToUpper().Substring(0, 1)) - 5]);
+
+                                        ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + command[1].Trim().ToUpper().Substring(0,1) + " was turned Off";
+
+                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "Off ";
                                         #endif
                                     }
                                     else
