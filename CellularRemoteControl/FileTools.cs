@@ -38,7 +38,7 @@ namespace CellularRemoteControl
             try
             {
                 // READ FILE
-                FileStream filestream = new FileStream(@"SD\\" + Filename, FileMode.Open);
+                FileStream filestream = new FileStream(@"\SD\" + Filename, FileMode.Open);
                 StreamReader reader = new StreamReader(filestream);
                 FileContent = reader.ReadToEnd();
                 reader.Close();

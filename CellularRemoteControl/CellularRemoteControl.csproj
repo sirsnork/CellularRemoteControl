@@ -42,6 +42,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="seeedStudioGSM.cs" />
+    <Compile Include="sha.cs" />
     <Compile Include="WebServer\Extension.cs" />
     <Compile Include="WebServer\Listener.cs" />
     <Compile Include="WebServer\Request.cs" />

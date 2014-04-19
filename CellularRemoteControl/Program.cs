@@ -1,5 +1,6 @@
 ﻿//TO-DO:    Setup blink function for each output, add relay thread for this?
 //          Handle multiple commands in a single message
+//
 //          Handle network disconnection and reconnection cleanly (restart web thread?). Something like this
 /*
             using Microsoft.SPOT.Net.NetworkInformation;
@@ -24,6 +25,9 @@
 */
 
 //          Add password protected whitelist addition. First phone sends password and becomes master, additional phones can send password SMS message and be added to whitelist
+//
+//          Work out some way to store switch type and switch name, so we can determine what routing to run to actually switch it
+//
 
 #region // Preprocessor code
 
@@ -194,7 +198,13 @@ namespace CellularRemoteControl
 
                 int requestedSwitch;
                 string requestedAction;
-                
+                bool WhitelistExists = false;
+                bool MasterCellExists = false;
+                bool MasterPasswordExists = false;
+                string MasterPassword = "";
+                string[] Whitelist = {""};
+                string MasterCell = "";
+
                 XBee xbee = new XBee(xbeecomport);
 
                 #if (LCD)
@@ -266,12 +276,26 @@ namespace CellularRemoteControl
                 gprs.DeleteAllSMS();
 
                 // File containing Cellphone number to send initialization SMS too
-                string NumCellDefault = FileTools.ReadString("settings\\NumCellDefault.txt");
+                if (File.Exists(@"SD\settings\MasterCell.txt"))
+                {
+                    MasterCell = FileTools.ReadString("settings\\MasterCell.txt");
+                    MasterCellExists = true;
+                }
+                // File containing Master password to allow whitelist additions
+                if (File.Exists(@"SD\settings\MasterPassword.txt"))
+                {
+                    MasterPassword = FileTools.ReadString("settings\\MasterPassword.txt");
+                    MasterPasswordExists = true;
+                }
                 // File containing cellphone numbers to accept commands from, all others are ignored, splitting on + sign since we get a single string back from the file read
-                string[] CellWhitelist = FileTools.ReadString("settings\\Whitelist.txt").Split(';');
-
+                if (File.Exists(@"SD\settings\Whitelist.txt"))
+                {
+                    Whitelist = FileTools.ReadString("settings\\Whitelist.txt").Split(';');
+                    WhitelistExists = true;
+                }
                 // Send SMS to default number saying we are up!
-                //gprs.SendSMS(NumCellDefault, "Remote switch controller operational at " + DateTime.Now.ToString());
+                if (MasterCellExists)
+                    gprs.SendSMS(MasterCell, "Remote switch controller operational at " + DateTime.Now.ToString());
 
                 while (true)
                 {
@@ -279,146 +303,174 @@ namespace CellularRemoteControl
                     {
                         gprs.ReadSMS(seeedStudioGSM.LastMessage);
                         gprs.DeleteAllSMS();
-                        if (File.Exists(@"SD\\Temp\\SMS.cmd"))
+                        if (File.Exists(@"SD\Temp\SMS.cmd"))
                         {
                             string ReplySMS = "";
                             string[] command = FileTools.ReadString("Temp\\SMS.cmd").Split(';');
-                            File.Delete(@"SD\\Temp\\SMS.cmd");
+                            File.Delete(@"SD\Temp\SMS.cmd");
                             Debug.Print ("Commands: " + command[0] + "   " + command[1]);
 
-                            if (CheckNumberWhitelist(command[0], CellWhitelist)) // Make sure incoming message was sent from allowed number
+                            if (WhitelistExists && MasterCellExists && MasterPasswordExists) // We have a whitelist, master phone and password otherwise first message is new master phone
                             {
-                                if (command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1) == "ALL")
+                                if (CheckNumberWhitelist(command[0], Whitelist)) // Make sure incoming message was sent from allowed number
                                 {
-                                    requestedSwitch = 0;
+                                    if (command[1].Substring(0, 8).ToUpper() == "PASSWORD" && MasterCell == command[0])
+                                    {
+                                        File.Delete(@"SD\settings\MasterPassword.txt");
+                                        byte[] master = SHA.computeSHA1(System.Text.Encoding.UTF8.GetBytes(command[1]));
+                                        MasterPassword = new String(System.Text.Encoding.UTF8.GetChars(master));
+                                        FileTools.New("MasterPassword.txt", "settings", MasterPassword); // Encode master password and add to whitelist
+                                        gprs.SendSMS(command[0], "New password " + command[1] + " saved");
+                                    }
+                                    if (command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1) == "ALL")
+                                    {
+                                        requestedSwitch = 0;
+                                    }
+                                    else
+                                    {
+                                        requestedSwitch = int.Parse(command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1));
+                                    }
+
+                                    requestedAction = command[1].Trim().ToUpper().Substring(command[1].Trim().Length - 1, 1);
+
+                                    if (requestedAction == "+")
+                                    {
+                                        if (requestedSwitch == 0) // 0 = ALL
+                                        {
+                                            for (int i = 0; i < NumSwitches; i++)
+                                            {
+                                                Relay.On(i + 1);
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                    SWState[i] = "On  ";
+#endif
+                                            }
+
+                                            for (int i = 0; i < NumXbeeSwitches; i++)
+                                            {
+                                                xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, true);
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                    SWState[i + 4] = "On  ";
+#endif
+                                            }
+
+                                            ReplySMS = DateTime.Now.ToString() + ": All switches turned On.";
+                                        }
+                                        else if (requestedSwitch <= 4) // Turn on numbered switch
+                                        {
+                                            Relay.On(requestedSwitch);
+                                            ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned On";
+
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                SWState[requestedSwitch - 1] = "On  ";
+#endif
+                                        }
+                                        else if (requestedSwitch > 4) // Turn on Xbee numbered switch
+                                        {
+                                            xbee.SetDigitalOutput(XbeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, true);
+
+                                            Debug.Print("Xbee: " + XbeeAddress[requestedSwitch - 5]);
+
+                                            ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned On";
+
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                SWState[requestedSwitch - 1] = "On  ";
+#endif
+                                        }
+                                        else
+                                        {
+                                            ReplySMS = DateTime.Now.ToString() + ": Error turning On Switch " + requestedSwitch;
+                                        }
+
+                                    }
+                                    else if (requestedAction == "-")
+                                    {
+                                        if (requestedSwitch == 0)
+                                        {
+                                            for (int i = 0; i < NumSwitches; i++)
+                                            {
+                                                Relay.Off(i + 1);
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                    SWState[i] = "Off ";
+#endif
+                                            }
+
+                                            for (int i = 0; i < NumXbeeSwitches; i++)
+                                            {
+                                                xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, false);
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                    SWState[i + 4] = "Off ";
+#endif
+                                            }
+
+                                            ReplySMS = DateTime.Now.ToString() + ": All switches turned Off.";
+                                        }
+                                        else if (requestedSwitch <= 4) // Turn off numbered switch
+                                        {
+                                            Relay.Off(requestedSwitch);
+                                            ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned Off";
+
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                SWState[requestedSwitch - 1] = "Off ";
+#endif
+                                        }
+                                        else if (requestedSwitch > 4) // Turn off Xbee numbered switch
+                                        {
+                                            xbee.SetDigitalOutput(XbeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, false);
+
+                                            Debug.Print("Xbee: " + XbeeAddress[requestedSwitch - 5]);
+
+                                            ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned Off";
+
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+                                                SWState[requestedSwitch - 1] = "Off ";
+#endif
+                                        }
+                                        else
+                                        {
+                                            ReplySMS = DateTime.Now.ToString() + ": Error turning Off Switch " + requestedSwitch;
+                                        }
+
+                                    }
+                                    else if (requestedAction == "?")
+                                    {
+                                        if (Relay.State(requestedSwitch))
+                                        {
+                                            ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " is On";
+                                        }
+                                        else
+                                        {
+                                            ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " is Off";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ReplySMS = "";
+                                        Debug.Print(DateTime.Now.ToString() + ": Unknown Command: " + command[1] + " from " + command[0]);
+                                        gprs.SendSMS(command[0], DateTime.Now.ToString() + ": Unknown command from " + command[0] + ": " + command[1]);
+                                    }
+                                    if (ReplySMS.Length > 0)
+                                        gprs.SendSMS(command[0], ReplySMS);
+                                }
+                                // If phone isn't in whitelist but the command equals the pasword, add them
+                                else if (MasterPassword == new String(System.Text.Encoding.UTF8.GetChars(SHA.computeSHA1(System.Text.Encoding.UTF8.GetBytes(command[1])))))
+                                {
+                                    FileTools.Add("Whitelist.txt", "settings", command[0]); // Add new phone to whitelist
+                                    gprs.SendSMS(command[0], "You have been added to the whitelist");
                                 }
                                 else
-                                {
-                                    requestedSwitch = int.Parse(command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1));
-                                }
+                                    Debug.Print(command[0] + " not in whitelist, message ignored");
+                            }
+                            else // No whitelist file, incoming message is from new master
+                            {
+                                FileTools.New("MasterCell.txt", "settings", command[0]); // Add master number
+                                FileTools.New("Whitelist.txt", "settings", command[0]); // Add new master to whitelist
 
-                                requestedAction = command[1].Trim().ToUpper().Substring(command[1].Trim().Length - 1,1);
+                                byte[] master = SHA.computeSHA1(System.Text.Encoding.UTF8.GetBytes(command[1])); //Encode Master password
 
-                                if (requestedAction == "+")
-                                {
-                                    if (requestedSwitch == 0) // 0 = ALL
-                                    {
-                                        for (int i = 0; i < NumSwitches; i++)
-                                        {
-                                            Relay.On(i + 1);
-                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
-                                                SWState[i] = "On  ";
-                                            #endif
-                                        }
-
-                                        for (int i = 0; i < NumXbeeSwitches; i++)
-                                        {
-                                            xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, true);
-                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
-                                                SWState[i + 4] = "On  ";
-                                            #endif
-                                        }
-
-                                        ReplySMS = DateTime.Now.ToString() + ": All switches turned On.";
-                                    }
-                                    else if (requestedSwitch <= 4) // Turn on numbered switch
-                                    {
-                                        Relay.On(requestedSwitch);
-                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned On";
-
-                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
-                                        #endif
-                                    }
-                                    else if (requestedSwitch > 4) // Turn on Xbee numbered switch
-                                    {
-                                        xbee.SetDigitalOutput(XbeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, true);
-
-                                        Debug.Print("Xbee: " + XbeeAddress[requestedSwitch - 5]);
-
-                                        ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned On";
-
-                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "On  ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = DateTime.Now.ToString() + ": Error turning On Switch " + requestedSwitch;
-                                    }
-
-                                }
-                                else if (requestedAction == "-")
-                                {
-                                    if (requestedSwitch == 0)
-                                    {
-                                        for (int i = 0; i < NumSwitches; i++)
-                                        {
-                                            Relay.Off(i + 1);
-                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                                SWState[i] = "Off ";
-                                            #endif
-                                        }
-
-                                        for (int i = 0; i < NumXbeeSwitches; i++)
-                                        {
-                                            xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, false);
-                                            #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
-                                                SWState[i + 4] = "Off ";
-                                            #endif
-                                        }
-
-                                        ReplySMS = DateTime.Now.ToString() + ": All switches turned Off.";
-                                    }
-                                    else if (requestedSwitch <= 4) // Turn off numbered switch
-                                    {
-                                        Relay.Off(requestedSwitch);
-                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned Off";
-
-                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "Off ";
-                                        #endif
-                                    }
-                                    else if (requestedSwitch > 4) // Turn off Xbee numbered switch
-                                    {
-                                        xbee.SetDigitalOutput(XbeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, false);
-
-                                        Debug.Print("Xbee: " + XbeeAddress[requestedSwitch - 5]);
-
-                                        ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned Off";
-
-                                        #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
-                                            SWState[int.Parse(command[1].Trim().ToUpper().Substring(0,1)) - 1] = "Off ";
-                                        #endif
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = DateTime.Now.ToString() + ": Error turning Off Switch " + requestedSwitch;
-                                    }
-
-                                }
-                                else if (requestedAction == "?")
-                                {
-                                    if (Relay.State(requestedSwitch)
-                                    {
-                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " is On";
-                                    }
-                                    else
-                                    {
-                                        ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " is Off";
-                                    }
-                                }
-                                else
-                                {
-                                    ReplySMS = "";
-                                    Debug.Print(DateTime.Now.ToString() + ": Unknown Command: " + command[1] + " from " + command[0]);
-                                    gprs.SendSMS(command[0], DateTime.Now.ToString() + ": Unknown command from " + command[0] + ": " + command[1]);
-                                }
-                                if (ReplySMS.Length > 0)
-                                    gprs.SendSMS(command[0], ReplySMS);
-                           }
-                           else
-                               Debug.Print(command[0] + " not in whitelist, message ignored");
+                                MasterPassword = new String(System.Text.Encoding.UTF8.GetChars(master));
+                                FileTools.New("MasterPassword.txt", "settings", MasterPassword); // Add encoded password to file
+                                gprs.SendSMS(command[0], "You are the new master, password " + command[1] + " saved");
+                            }
                         }
                     }
                     #if (LCD)
@@ -428,13 +480,13 @@ namespace CellularRemoteControl
                     Thread.Sleep(1000);
                 }
             }
-            public static Boolean CheckNumberWhitelist(string CellNumber, string[] CellWhiteList)
+            public static Boolean CheckNumberWhitelist(string CellNumber, string[] Whitelist)
             {
                 Debug.Print("Incoming Number: " + CellNumber);
-                for (int j = 0; j < CellWhiteList.Length; j++) // start at 1 as the first entry in CellWhiteList will be blank as we split on '+' and '+' was the first character
+                for (int j = 0; j < Whitelist.Length; j++)
                 {
-                    Debug.Print("Whitelist Number: " + CellWhiteList[j]);
-                    if (CellNumber == CellWhiteList[j])
+                    Debug.Print("Whitelist Number: " + Whitelist[j]);
+                    if (CellNumber == Whitelist[j])
                     {
                         return true;
                     }
