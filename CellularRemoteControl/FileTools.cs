@@ -92,7 +92,7 @@ namespace CellularRemoteControl
                     streamWriter.Close();
                 }
                 filestream.Close();
-                Debug.Print(Filename + ": created");
+                Debug.Print(Filename + ": updated");
                 return true;
             }
             catch
