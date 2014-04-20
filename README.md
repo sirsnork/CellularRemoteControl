@@ -25,7 +25,7 @@ If you ever want to change the password send a SMS message containing the follow
 The password is SHA1 hashed and stored on the SD card, it is not stored anywhere in cleartext
 
 
-You must install an SD card with the following folder/file structure
+The follwoing file structure will be created on the SD card
 
 ```
 Root
