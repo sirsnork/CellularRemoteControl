@@ -18,7 +18,7 @@ Xbee code is still in development, eventually you will be able to have Xbee radi
 
 Setup:
 
-When first powering on the system, let it complete bootup and then send it a SMS message from the master phone, the content of the message should be the password you want to set. THe password is used to whitelist other phones. To whitelist other phones they should send a SMS message with the password as the only content.
+When first powering on the system, let it complete bootup and then send it a SMS message from the master phone, the content of the message should be the password you want to set. The password is used to whitelist other phones. To whitelist another phone send a SMS message with the password as the only content. Messages from phones that aren't whitelisted will be ignored.
 
 If you ever want to change the password send a SMS message containing the following "password <password>". That is, the word password, a space followed by the new password. This can only be done from the master phone.
 
