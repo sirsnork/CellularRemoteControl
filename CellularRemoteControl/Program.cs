@@ -314,17 +314,17 @@ namespace CellularRemoteControl
                             {
                                 if (CheckNumberWhitelist(command[0], Whitelist)) // Make sure incoming message was sent from allowed number
                                 {
-                                    if (command[1].Substring(0, 7).ToUpper() == "PASSWORD" && MasterCell == command[0])
+                                    if (command[1].Substring(0, 8).ToUpper() == "PASSWORD" && MasterCell == command[0])
                                     {
-                                        File.Delete(@"SD\settings\MasterPassword.txt");
-
-                                        byte[] master = SHA.computeSHA1(System.Text.Encoding.UTF8.GetBytes(command[1])); //Encode Master password
+                                        byte[] master = SHA.computeSHA1(System.Text.Encoding.UTF8.GetBytes(command[1].Trim().Substring(9))); //Encode Master password
+                                        MasterPassword = ""; // Clear variable before calculating new password
                                         foreach (byte b in master)
                                         {
                                             MasterPassword = MasterPassword + b.ToString();
                                         }
+                                        File.Delete(@"SD\settings\MasterPassword.txt");
                                         FileTools.New("MasterPassword.txt", "settings", MasterPassword); // Encode master password and add to whitelist
-                                        gprs.SendSMS(command[0], "New password " + command[1] + " saved");
+                                        gprs.SendSMS(command[0], "New password " + command[1].Substring(9) + " saved");
                                     }
                                     else
                                     {
@@ -346,17 +346,17 @@ namespace CellularRemoteControl
                                                 for (int i = 0; i < NumSwitches; i++)
                                                 {
                                                     Relay.On(i + 1);
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
                                                         SWState[i] = "On  ";
-    #endif
+#endif
                                                 }
 
                                                 for (int i = 0; i < NumXbeeSwitches; i++)
                                                 {
                                                     xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, true);
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
                                                         SWState[i + 4] = "On  ";
-    #endif
+#endif
                                                 }
 
                                                 ReplySMS = DateTime.Now.ToString() + ": All switches turned On.";
@@ -366,9 +366,9 @@ namespace CellularRemoteControl
                                                 Relay.On(requestedSwitch);
                                                 ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned On";
 
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                     SWState[requestedSwitch - 1] = "On  ";
-    #endif
+#endif
                                             }
                                             else if (requestedSwitch > 4) // Turn on Xbee numbered switch
                                             {
@@ -378,9 +378,9 @@ namespace CellularRemoteControl
 
                                                 ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned On";
 
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                     SWState[requestedSwitch - 1] = "On  ";
-    #endif
+#endif
                                             }
                                             else
                                             {
@@ -395,17 +395,17 @@ namespace CellularRemoteControl
                                                 for (int i = 0; i < NumSwitches; i++)
                                                 {
                                                     Relay.Off(i + 1);
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                         SWState[i] = "Off ";
-    #endif
+#endif
                                                 }
 
                                                 for (int i = 0; i < NumXbeeSwitches; i++)
                                                 {
                                                     xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, false);
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
                                                         SWState[i + 4] = "Off ";
-    #endif
+#endif
                                                 }
 
                                                 ReplySMS = DateTime.Now.ToString() + ": All switches turned Off.";
@@ -415,9 +415,9 @@ namespace CellularRemoteControl
                                                 Relay.Off(requestedSwitch);
                                                 ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned Off";
 
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                     SWState[requestedSwitch - 1] = "Off ";
-    #endif
+#endif
                                             }
                                             else if (requestedSwitch > 4) // Turn off Xbee numbered switch
                                             {
@@ -427,9 +427,9 @@ namespace CellularRemoteControl
 
                                                 ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned Off";
 
-    #if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
+#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                     SWState[requestedSwitch - 1] = "Off ";
-    #endif
+#endif
                                             }
                                             else
                                             {
@@ -467,6 +467,7 @@ namespace CellularRemoteControl
                                     {
                                         GivenPassword = GivenPassword + b.ToString();
                                     }
+                                    Debug.Print("Given: " + GivenPassword + " Master: " + MasterPassword);
                                     if (GivenPassword == MasterPassword)
                                     {
                                         FileTools.Add("Whitelist.txt", "settings", command[0]); // Add new phone to whitelist
