@@ -1,6 +1,7 @@
 ﻿using System.IO.Ports;
 using Microsoft.SPOT.Hardware;
 using System.Threading;
+using Microsoft.SPOT;
 
 namespace CellularRemoteControl
 {
@@ -48,8 +49,8 @@ namespace CellularRemoteControl
             _nextFrameId = 1;
             _frameBuilder = new ApiFrameBuilder();
 
-            _uart = new SerialPort(com, 9800, Parity.None, 8, StopBits.One);
-            _uart.DataReceived += DataReceived;
+            _uart = new SerialPort(com, 9600, Parity.None, 8, StopBits.One);
+            _uart.DataReceived += XBeeDataReceived;
             _uart.Open();
         }
 
@@ -188,7 +189,7 @@ namespace CellularRemoteControl
             return frameId;
         }
 
-        private void DataReceived(object sender, SerialDataReceivedEventArgs e)
+        private void XBeeDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             if (_uart.BytesToRead <= 0)
             {
@@ -258,6 +259,9 @@ namespace CellularRemoteControl
                 case (byte)ApiFrameName.ZigBeeReceivePacket:
                     ReceivedZigBeePacket(frame);
                     break;
+                case (byte)ApiFrameName.NodeIdentificationIndicator:
+                    ReceivedNodeIdentificationPacket(frame);
+                    break;
             }
 
         }
@@ -276,7 +280,17 @@ namespace CellularRemoteControl
                     _frameBuffer[frameID] = null;
                 }
             }
+        }
 
+        internal void ReceivedNodeIdentificationPacket(ApiFrame frame)
+        {
+            string NewNodeID = "";
+            byte[] data = Utility.ExtractRangeFromArray(frame.FrameData, 1, frame.Length - 28);
+            foreach (byte b in data)
+            {
+                NewNodeID = NewNodeID + b.ToString("X2");
+            }
+            Debug.Print("New Radio Joined: " + NewNodeID);
         }
 
         internal void ReceivedZigBeePacket(ApiFrame frame)

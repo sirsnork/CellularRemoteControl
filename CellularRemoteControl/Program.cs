@@ -2,11 +2,10 @@
 //
 //          Handle multiple commands in a single message
 //
-//          Handle network disconnection and reconnection cleanly (restart web thread?). Something like this
-//
 //          Work out some way to store switch type and switch name, so we can determine what routing to run to actually switch it
-//
 /*
+ *          Handle network disconnection and reconnection cleanly (restart web thread?). Something like this
+ * 
             using Microsoft.SPOT.Net.NetworkInformation;
 
             NetworkChange.NetworkAvailabilityChanged += NetworkChange_NetworkAvailabilityChanged; 
@@ -311,7 +310,9 @@ namespace CellularRemoteControl
             }
             // Send SMS to default number saying we are up!
             if (MasterCellExists)
-                gprs.SendSMS(MasterCell, "Remote switch controller operational at " + DateTime.Now.ToString());
+            {
+                //gprs.SendSMS(MasterCell, "Remote switch controller operational at " + DateTime.Now.ToString());
+            }
 
             while (true)
             {
