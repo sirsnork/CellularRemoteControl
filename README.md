@@ -8,13 +8,13 @@ http://forums.netduino.com/index.php?/topic/8433-remote-control-heating/
 
 Instructions:
 
-"#define" or "#undef" the modules you need a the top of Program.cs. You can include or exclude LCD, CELL, XBEE and WEB if you don't have some of those, however you need either CELL or WEB enabled
+"#define" or "#undef" the modules you need a the top of Program.cs. You can include or exclude LCD, CELL, XBEE and WEB if you don't have some of those, however you need CELL and/or WEB enabled
 
 Set GPRS Sheild to "HardwareSerial/Arduino". This sets it to use D0 and D1 as it's serial port, which corresponds to COM1 on the Netduino 2. 
 The LCD Connects to COM2 (if enabled), or D2/D3 leaving D4-D7 free for the SeeedStudion Relay Sheild V2
 Connect a push-button microswitch to D8. Pressing this will display the current IP address on the LCD for 10 seconds once booted.
 
-Xbee code is still in development, eventually you will be able to have Xbee radios connected to relays to remote switch sockets.
+Xbee code is still in development, eventually you will be able to have Xbee radios connected to relays/triacs to remote switch sockets.
 
 Setup:
 
@@ -36,7 +36,12 @@ Root
   | - Web                               : Contains any static web pages you want the web server to use
   
 ```  
-Current commands are:
+Current master commands are:
+
+* password <password>   : Changes existing whitelist password
+* showip                : Returns existing Web server IP address
+
+Current whitelist commands are:
 
 * 1+    : Turns on D7 Pin
 * 1-    : Turns off D7 Pin
