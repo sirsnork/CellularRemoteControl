@@ -343,6 +343,12 @@ namespace CellularRemoteControl
                                     FileTools.New("MasterPassword.txt", "settings", MasterPassword); // Encode master password and add to whitelist
                                     gprs.SendSMS(command[0], "New password " + command[1].Substring(9) + " saved");
                                 }
+#if (WEB)
+                                else if (command[1].ToUpper() == "SHOWIP" && MasterCell == command[0]) // Return current IP if requested
+                                {
+                                    gprs.SendSMS(command[0], "IP Address: " + Microsoft.SPOT.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()[0].IPAddress);
+                                }
+#endif
                                 else
                                 {
                                     if (command[1].Trim().ToUpper().Substring(0, command[1].Trim().Length - 1) == "ALL")
@@ -518,7 +524,7 @@ namespace CellularRemoteControl
                                 MasterPassword = FileTools.ReadString("settings\\MasterPassword.txt").TrimEnd(';');
                                 MasterPasswordExists = true;
 
-                                gprs.SendSMS(command[0], "You are the new master, password " + command[1] + " saved");
+                                gprs.SendSMS(command[0], "New master phone set, password " + command[1] + " saved");
                             }
                             else
                             {

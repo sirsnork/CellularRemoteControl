@@ -285,7 +285,7 @@ namespace CellularRemoteControl
         internal void ReceivedNodeIdentificationPacket(ApiFrame frame)
         {
             string NewNodeID = "";
-            byte[] data = Utility.ExtractRangeFromArray(frame.FrameData, 1, frame.Length - 28);
+            byte[] data = Utility.ExtractRangeFromArray(frame.FrameData, 1, frame.Length - 28); // Get XBee 64bit address
             foreach (byte b in data)
             {
                 NewNodeID = NewNodeID + b.ToString("X2");
