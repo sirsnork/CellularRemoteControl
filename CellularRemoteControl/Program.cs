@@ -3,6 +3,8 @@
 //          Handle multiple commands in a single message
 //
 //          Work out some way to store switch type and switch name, so we can determine what routing to run to actually switch it
+//
+//          Split the threads into their own files
 /*
  *          Handle network disconnection and reconnection cleanly (restart web thread?). Something like this
  * 
@@ -27,13 +29,12 @@
             }
 */
 
-
 #region // Preprocessor code
 
-#undef LCD // set to #undef LCD if no screen is attached to COM2
-#define CELL // Set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
-#undef WEB // set to #undef WEB to disable web server
-#define XBEE
+#undef LCD      // set to #undef LCD if no screen is attached to COM2
+#define CELL    // set to #undef to disable cellular code. Accessable only by network then. You must define either CELL or WEB.
+#undef WEB      // set to #undef WEB to disable web server
+#define XBEE    // set to #undef XBEE to disable remote switches
 
 #if (!CELL && !WEB)
 #error No network transport defined
@@ -70,6 +71,7 @@ namespace CellularRemoteControl
     {
         public static OutputPort _shieldPower = new OutputPort((Cpu.Pin)0x012, false); // power pin to shields. Toggling reboots all shields
         public static int NumSwitches = 4;
+        public static string[] SWState = { "Off ", "Off ", "Off ", "Off ", "Off", "Off" }; // Maybe convert this to an array of an array so we can store Name, State (bool), LCDState etc for each switch
 
 #if (CELL)
         public static int gsmbaudrate = 115200;
@@ -81,15 +83,14 @@ namespace CellularRemoteControl
         public static byte[] lcdMessageLine2;
         public static int LCDSleep = 0;
 #endif
-#if (LCD || WEB)
-        public static string[] SWState = { "Off ", "Off ", "Off ", "Off ", "Off", "Off" }; // Maybe convert this to an array of an array so we can store Name, State (bool), LCDState etc for each switch
-#endif
+        
 #if (WEB)
         const string WebFolder = "\\SD\\Web";
 #endif
 #if XBEE
-        public static ulong[] XbeeAddress = { 0x0013A20040A78109, 0x0013A20040A780F7 };
-        public static string xbeecomport = "COM2";
+        public static ulong[] XBeeAddress = { 0x0013A20040A78109, 0x0013A20040A780F7 }; // 0013A20040B18564
+        public static int XBeeBaudRate = 115200;
+        public static string XBeeComport = "COM2";
         public static int NumXbeeSwitches = 2;
 #endif
 
@@ -220,12 +221,14 @@ namespace CellularRemoteControl
             string[] Whitelist = {""};
             string MasterCell = "";
 
-            XBee xbee = new XBee(xbeecomport);
+#if (XBEE)
+            XBee xbee = new XBee(XBeeComport, XBeeBaudRate);
+#endif
 
-            #if (LCD)
+#if (LCD)
                 lcdMessageLine1 = System.Text.Encoding.UTF8.GetBytes("  Powering up");
                 lcdMessageLine2 = System.Text.Encoding.UTF8.GetBytes("     Modem");
-            #endif
+#endif
 
             while (InitTimeout == false && seeedStudioGSM.ModemReady == false)
             {
@@ -369,41 +372,31 @@ namespace CellularRemoteControl
                                             for (int i = 0; i < NumSwitches; i++)
                                             {
                                                 Relay.On(i + 1);
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
                                                     SWState[i] = "On  ";
-#endif
                                             }
-
+#if (XBEE)
                                             for (int i = 0; i < NumXbeeSwitches; i++)
                                             {
-                                                xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, true);
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                xbee.SetDigitalOutput(XBeeAddress[i], XBeeCommand.ADio0Configuration, true);
                                                     SWState[i + 4] = "On  ";
-#endif
                                             }
-
+#endif
                                             ReplySMS = DateTime.Now.ToString() + ": All switches turned On.";
                                         }
                                         else if (requestedSwitch <= 4) // Turn on numbered switch
                                         {
                                             Relay.On(requestedSwitch);
                                             ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned On";
-
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                 SWState[requestedSwitch - 1] = "On  ";
-#endif
                                         }
                                         else if (requestedSwitch > 4) // Turn on Xbee numbered switch
                                         {
-                                            xbee.SetDigitalOutput(XbeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, true);
+                                            xbee.SetDigitalOutput(XBeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, true);
 
-                                            Debug.Print("Xbee: " + XbeeAddress[requestedSwitch - 5]);
+                                            Debug.Print("Xbee: " + XBeeAddress[requestedSwitch - 5]);
 
                                             ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned On";
-
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                 SWState[requestedSwitch - 1] = "On  ";
-#endif
                                         }
                                         else
                                         {
@@ -418,42 +411,34 @@ namespace CellularRemoteControl
                                             for (int i = 0; i < NumSwitches; i++)
                                             {
                                                 Relay.Off(i + 1);
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                     SWState[i] = "Off ";
-#endif
                                             }
-
+#if (XBEE)
                                             for (int i = 0; i < NumXbeeSwitches; i++)
                                             {
-                                                xbee.SetDigitalOutput(XbeeAddress[i], XBeeCommand.ADio0Configuration, false);
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/ (No, as it shares the same namespace, it would work there)
+                                                xbee.SetDigitalOutput(XBeeAddress[i], XBeeCommand.ADio0Configuration, false);
                                                     SWState[i + 4] = "Off ";
-#endif
                                             }
-
+#endif
                                             ReplySMS = DateTime.Now.ToString() + ": All switches turned Off.";
                                         }
                                         else if (requestedSwitch <= 4) // Turn off numbered switch
                                         {
                                             Relay.Off(requestedSwitch);
                                             ReplySMS = DateTime.Now.ToString() + ": Switch " + requestedSwitch + " was turned Off";
-
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                 SWState[requestedSwitch - 1] = "Off ";
-#endif
                                         }
+#if (XBEE)
                                         else if (requestedSwitch > 4) // Turn off Xbee numbered switch
                                         {
-                                            xbee.SetDigitalOutput(XbeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, false);
+                                            xbee.SetDigitalOutput(XBeeAddress[requestedSwitch - 5], XBeeCommand.ADio0Configuration, false);
 
-                                            Debug.Print("Xbee: " + XbeeAddress[requestedSwitch - 5]);
+                                            Debug.Print("Xbee: " + XBeeAddress[requestedSwitch - 5]);
 
                                             ReplySMS = DateTime.Now.ToString() + ": Xbee Switch " + requestedSwitch + " was turned Off";
-
-#if (LCD) // Would be cleaner to move all this SW?State code into relay.cs, but would need to define LCD there too :/
                                                 SWState[requestedSwitch - 1] = "Off ";
-#endif
                                         }
+#endif
                                         else
                                         {
                                             ReplySMS = DateTime.Now.ToString() + ": Error turning Off Switch " + requestedSwitch;

@@ -43,13 +43,13 @@ namespace CellularRemoteControl
             0xFE
         };
 
-        public XBee(string com)
+        public XBee(string com, int baud)
         {
             _frameBuffer = new ApiFrame[10];
             _nextFrameId = 1;
             _frameBuilder = new ApiFrameBuilder();
 
-            _uart = new SerialPort(com, 9600, Parity.None, 8, StopBits.One);
+            _uart = new SerialPort(com, baud, Parity.None, 8, StopBits.One);
             _uart.DataReceived += XBeeDataReceived;
             _uart.Open();
         }
@@ -285,7 +285,7 @@ namespace CellularRemoteControl
         internal void ReceivedNodeIdentificationPacket(ApiFrame frame)
         {
             string NewNodeID = "";
-            byte[] data = Utility.ExtractRangeFromArray(frame.FrameData, 1, frame.Length - 28); // Get XBee 64bit address
+            byte[] data = Utility.ExtractRangeFromArray(frame.FrameData, 14, frame.Length - 28); // Get XBee 64bit address 1 and -28, 14, -15
             foreach (byte b in data)
             {
                 NewNodeID = NewNodeID + b.ToString("X2");
